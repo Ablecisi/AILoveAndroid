@@ -134,7 +134,7 @@ public class SettingsActivity extends AppCompatActivity {
         // 关于我们
         findViewById(R.id.layoutAbout).setOnClickListener(v -> {
             Intent intent = new Intent(this, WebViewActivity.class);
-            intent.putExtra(ExtrasConstant.EXTRA_WEB_VIEW_TITLE, "开源协议");
+            intent.putExtra(ExtrasConstant.EXTRA_WEB_VIEW_TITLE, "关于我们");
             intent.putExtra(ExtrasConstant.EXTRA_ASSET_PATH, "about.html");
             startActivity(intent);
         });
@@ -142,8 +142,8 @@ public class SettingsActivity extends AppCompatActivity {
         // 用户协议
         findViewById(R.id.layoutTerms).setOnClickListener(v -> {
             Intent intent = new Intent(this, WebViewActivity.class);
-            intent.putExtra(ExtrasConstant.EXTRA_WEB_VIEW_TITLE, "开源协议");
-            intent.putExtra(ExtrasConstant.EXTRA_ASSET_PATH, "https://raw.githubusercontent.com/Ablecisi/Nexa-Campus/refs/heads/master/LICENSE");
+            intent.putExtra(ExtrasConstant.EXTRA_WEB_VIEW_TITLE, "用户协议");
+            intent.putExtra(ExtrasConstant.EXTRA_ASSET_PATH, "terms.html");
             startActivity(intent);
         });
 

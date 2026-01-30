@@ -4,7 +4,7 @@ package com.ailianlian.ablecisi.constant;
  * ailianlian
  * com.ailianlian.ablecisi.constant
  * LoginTokenSecretConstant <br>
- *
+ * 手机登录Token密钥
  * @author Ablecisi
  * @version 1.0
  * 2025/4/27
