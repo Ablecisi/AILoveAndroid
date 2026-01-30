@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_find">
+
+    <fragment
+        android:id="@+id/nav_find"
+        android:name="com.ailianlian.ablecisi.fragment.HomeFragment"
+        android:label="@string/nav_find"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_chat"
+        android:name="com.ailianlian.ablecisi.fragment.ChatListFragment"
+        android:label="@string/nav_chat"
+        tools:layout="@layout/fragment_chat_list">
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_community"
+        android:name="com.ailianlian.ablecisi.fragment.CommunityFragment"
+        android:label="@string/nav_community"
+        tools:layout="@layout/fragment_community" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.ailianlian.ablecisi.fragment.ProfileFragment"
+        android:label="@string/nav_profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

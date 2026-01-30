@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 欢迎</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .welcome-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 30px;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+        }
+
+        .logo-container {
+            width: 140px;
+            height: 140px;
+            background-color: white;
+            border-radius: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(195, 190, 240, 0.3);
+            overflow: hidden;
+        }
+
+        .logo {
+            width: 140px;
+            height: 140px;
+            animation: pulse 2s infinite;
+            object-fit: cover;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-color);
+            margin-bottom: 40px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .login-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background-color: #12B7F5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 0;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(18, 183, 245, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(18, 183, 245, 0.5);
+        }
+
+        .login-button i {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .login-options {
+            margin-top: 20px;
+            text-align: center;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .other-login {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .other-login-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background-color: #07C160;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 0;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(7, 193, 96, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .other-login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(7, 193, 96, 0.5);
+        }
+
+        .other-login-button i {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .terms {
+            margin-top: 40px;
+            font-size: 12px;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .terms a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0px 25px 0px;
+            color: var(--light-text);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider::before {
+            margin-right: 10px;
+        }
+
+        .divider::after {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 欢迎内容 -->
+        <div class="app-content">
+            <div class="welcome-container">
+
+                <div class="glass-card">
+                    <h1 class="welcome-title">欢迎来到 AI恋恋</h1>
+                    <p class="welcome-subtitle">与AI建立情感连接，分享你的生活点滴，探索数字世界中的无限可能</p>
+                    
+                    <center>
+                        <div class="logo-container">
+                            <img src="images/logo.png" alt="AI恋恋 Logo" class="logo">
+                        </div>
+                    </center>
+
+                    <div class="divider" style="margin-top: 200px;"></div>
+
+                    <!-- 登录按钮组 -->
+                    <div class="login-buttons" style="display: flex; gap: 15px;">
+                        <!-- QQ登录按钮 -->
+                        <button class="login-button" style="flex: 1;" onclick="window.location.href='home.html'">
+                            <i class="fab fa-qq"></i>
+                            QQ登录
+                        </button>
+
+                        <!-- 微信登录按钮 -->
+                        <button class="other-login-button" style="flex: 1;" onclick="window.location.href='home.html'">
+                            <i class="fab fa-weixin"></i>
+                            微信登录
+                        </button>
+                    </div>
+
+                    <p class="terms">
+                        登录即表示您同意我们的<a href="#">服务条款</a>和<a href="#">隐私政策</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 个人资料</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+            padding: 30px 16px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .profile-avatar-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50px;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 15px rgba(195, 190, 240, 0.3);
+        }
+
+        .profile-edit-avatar {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .profile-edit-avatar:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-name {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: var(--text-color);
+        }
+
+        .profile-id {
+            font-size: 14px;
+            color: var(--light-text);
+            margin: 0 0 15px 0;
+        }
+
+        .profile-bio {
+            font-size: 14px;
+            text-align: center;
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+            color: var(--text-color);
+            max-width: 300px;
+        }
+
+        .profile-stats {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 0;
+        }
+
+        .profile-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .profile-stat-label {
+            font-size: 12px;
+            color: var(--light-text);
+            margin-top: 3px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-action-button {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .profile-action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-action-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .profile-action-secondary {
+            background-color: white;
+            color: var(--accent-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .profile-tabs {
+            display: flex;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 10px;
+        }
+
+        .profile-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 15px;
+            color: var(--light-text);
+            position: relative;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .profile-tab.active {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .profile-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .profile-content {
+            padding: 16px;
+            background-color: var(--background-color);
+        }
+
+        .profile-section {
+            background-color: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .profile-section-header {
+            padding: 15px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .profile-section-action {
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .profile-section-action:hover {
+            color: var(--accent-color);
+        }
+
+        .profile-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .profile-menu-item:hover {
+            background-color: var(--secondary-light);
+        }
+
+        .profile-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-menu-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            color: var(--primary-color);
+            background-color: var(--secondary-light);
+            border-radius: 10px;
+        }
+
+        .profile-menu-text {
+            flex: 1;
+            font-size: 15px;
+            color: var(--text-color);
+        }
+
+        .profile-menu-arrow {
+            color: var(--light-text);
+        }
+
+        .ai-companions {
+            display: flex;
+            padding: 16px;
+            overflow-x: auto;
+            gap: 20px;
+            scrollbar-width: none;
+        }
+
+        .ai-companions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .ai-companion-card {
+            width: 80px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .ai-companion-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .ai-companion-avatar {
+            width: 65px;
+            height: 65px;
+            border-radius: 32.5px;
+            object-fit: cover;
+            margin-bottom: 8px;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(195, 190, 240, 0.3);
+        }
+
+        .ai-companion-name {
+            font-size: 12px;
+            text-align: center;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            color: var(--text-color);
+        }
+
+        .grid-posts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+        }
+
+        .grid-post {
+            aspect-ratio: 1;
+            object-fit: cover;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .grid-post:hover {
+            opacity: 0.9;
+        }
+
+        .settings-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--accent-color);
+            font-size: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .settings-button:hover {
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body data-active-tab="profile">
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 页面内容 -->
+        <div class="app-content">
+            <!-- 个人资料头部 -->
+            <div class="profile-header">
+                <a href="settings.html" class="settings-button">
+                    <i class="fas fa-cog"></i>
+                </a>
+                <div class="profile-avatar-container">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="用户头像" class="profile-avatar">
+                    <div class="profile-edit-avatar">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <h1 class="profile-name">张雪</h1>
+                <p class="profile-id">@zhangxue</p>
+                <p class="profile-bio">热爱生活，热爱AI。与我的AI伙伴一起探索数字世界的无限可能。</p>
+
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="profile-stat-number">128</span>
+                        <span class="profile-stat-label">动态</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-number">256</span>
+                        <span class="profile-stat-label">关注</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-number">512</span>
+                        <span class="profile-stat-label">粉丝</span>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button class="profile-action-button profile-action-primary">编辑资料</button>
+                    <button class="profile-action-button profile-action-secondary">分享</button>
+                </div>
+            </div>
+
+            <!-- 个人资料标签页 -->
+            <div class="profile-tabs">
+                <div class="profile-tab active">动态</div>
+                <div class="profile-tab">AI伙伴</div>
+                <div class="profile-tab">收藏</div>
+            </div>
+
+            <!-- 个人资料内容 -->
+            <div class="profile-content">
+                <!-- AI伙伴部分 -->
+                <div class="profile-section">
+                    <div class="profile-section-header">
+                        <h3 class="profile-section-title">我的AI伙伴</h3>
+                        <a href="#" class="profile-section-action">查看全部</a>
+                    </div>
+                    <div class="ai-companions">
+                        <div class="ai-companion-card">
+                            <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="小雪" class="ai-companion-avatar">
+                            <p class="ai-companion-name">小雪</p>
+                        </div>
+                        <div class="ai-companion-card">
+                            <img src="https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="阿杰" class="ai-companion-avatar">
+                            <p class="ai-companion-name">阿杰</p>
+                        </div>
+                        <div class="ai-companion-card">
+                            <img src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="莉莉" class="ai-companion-avatar">
+                            <p class="ai-companion-name">莉莉</p>
+                        </div>
+                        <div class="ai-companion-card">
+                            <img src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="小北" class="ai-companion-avatar">
+                            <p class="ai-companion-name">小北</p>
+                        </div>
+                        <div class="ai-companion-card">
+                            <img src="https://images.pexels.com/photos/1898555/pexels-photo-1898555.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="星辰" class="ai-companion-avatar">
+                            <p class="ai-companion-name">星辰</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 动态部分 -->
+                <div class="profile-section">
+                    <div class="profile-section-header">
+                        <h3 class="profile-section-title">最近动态</h3>
+                        <a href="#" class="profile-section-action">查看全部</a>
+                    </div>
+                    <div class="grid-posts">
+                        <img src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                        <img src="https://images.pexels.com/photos/4622893/pexels-photo-4622893.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                        <img src="https://images.pexels.com/photos/4622890/pexels-photo-4622890.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                        <img src="https://images.pexels.com/photos/4622887/pexels-photo-4622887.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                        <img src="https://images.pexels.com/photos/1898555/pexels-photo-1898555.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                        <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="动态图片" class="grid-post">
+                    </div>
+                </div>
+
+                <!-- 设置菜单 -->
+                <div class="profile-section">
+                    <div class="profile-menu-item">
+                        <div class="profile-menu-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="profile-menu-text">邀请好友</div>
+                        <div class="profile-menu-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    <div class="profile-menu-item">
+                        <div class="profile-menu-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="profile-menu-text">隐私与安全</div>
+                        <div class="profile-menu-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    <div class="profile-menu-item">
+                        <div class="profile-menu-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="profile-menu-text">通知设置</div>
+                        <div class="profile-menu-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    <div class="profile-menu-item">
+                        <div class="profile-menu-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="profile-menu-text">帮助与反馈</div>
+                        <div class="profile-menu-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div id="tab-bar"></div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>

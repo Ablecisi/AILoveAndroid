@@ -1,0 +1,7 @@
+/build
+/sig-adaptation/debug/keys.jks
+/debug/output-metadata.json
+/debug/app-debug.apk
+/debug/app-debug.zip
+/debug/app-debug.rar
+/src/main/assets/config/config.propertie

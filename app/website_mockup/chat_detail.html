@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 聊天详情</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-button {
+            font-size: 20px;
+            margin-right: 15px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-header-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .chat-header-status {
+            font-size: 12px;
+            color: var(--success-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-status i {
+            font-size: 8px;
+            margin-right: 4px;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 20px;
+        }
+
+        .chat-header-actions i {
+            font-size: 20px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .chat-header-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            background-color: var(--background-color);
+            height: calc(100% - 60px - 60px);
+            overflow-y: auto;
+        }
+
+        .message-group {
+            margin-bottom: 20px;
+        }
+
+        .message-time {
+            text-align: center;
+            font-size: 12px;
+            color: var(--light-text);
+            margin: 15px 0;
+            background-color: rgba(0, 0, 0, 0.05);
+            padding: 5px 12px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .message-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .message-row.received {
+            justify-content: flex-start;
+        }
+
+        .message-row.sent {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            margin-right: 10px;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .message-bubble.received {
+            background-color: white;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            color: var(--text-color);
+        }
+
+        .message-bubble.sent {
+            background-color: var(--primary-light);
+            color: var(--text-color);
+            border-bottom-right-radius: 5px;
+            box-shadow: 0 2px 5px rgba(195, 190, 240, 0.3);
+        }
+
+        .typing-indicator {
+            display: flex;
+            padding: 12px 16px;
+            background-color: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing-animation 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing-animation {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .chat-input-container {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .chat-input-actions {
+            display: flex;
+            gap: 15px;
+            color: var(--primary-color);
+            font-size: 20px;
+        }
+
+        .chat-input-actions i {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .chat-input-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin: 0 10px;
+            background-color: #f0f0f0;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .send-button {
+            color: var(--primary-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .message-image {
+            max-width: 200px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .message-action-button {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--accent-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .message-action-button:hover {
+            background-color: var(--secondary-light);
+        }
+
+        .message-time-sent {
+            font-size: 10px;
+            color: var(--light-text);
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-reactions {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .message-reaction {
+            font-size: 12px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 2px 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body data-active-tab="chat">
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 页面内容 -->
+        <div class="app-content">
+            <!-- 聊天头部 -->
+            <div class="chat-header">
+                <a href="chat_list.html" class="back-button">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <div class="chat-header-info">
+                    <h2 class="chat-header-name">小雪</h2>
+                    <span class="chat-header-status"><i class="fas fa-circle"></i> 在线</span>
+                </div>
+                <div class="chat-header-actions">
+                    <i class="fas fa-phone"></i>
+                    <i class="fas fa-video"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+
+            <!-- 聊天内容 -->
+            <div class="chat-container">
+                <!-- 消息时间分组 -->
+                <div class="message-time">今天 12:15</div>
+
+                <!-- 接收的消息 -->
+                <div class="message-row received">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="小雪" class="message-avatar">
+                    <div>
+                        <div class="message-bubble received">
+                            嗨，今天过得怎么样？😊
+                        </div>
+                        <div class="message-time-sent">12:15</div>
+                    </div>
+                </div>
+
+                <!-- 发送的消息 -->
+                <div class="message-row sent">
+                    <div>
+                        <div class="message-bubble sent">
+                            今天过得还不错，刚刚完成了一个项目，感觉很有成就感！
+                        </div>
+                        <div class="message-time-sent">12:17</div>
+                    </div>
+                </div>
+
+                <!-- 接收的消息 -->
+                <div class="message-row received">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="小雪" class="message-avatar">
+                    <div>
+                        <div class="message-bubble received">
+                            那真是太棒了！能分享一下是什么项目吗？我很好奇 🌟
+                        </div>
+                        <div class="message-reactions">
+                            <span class="message-reaction">👍 1</span>
+                        </div>
+                        <div class="message-time-sent">12:18</div>
+                    </div>
+                </div>
+
+                <!-- 发送的消息 -->
+                <div class="message-row sent">
+                    <div>
+                        <div class="message-bubble sent">
+                            是一个移动应用的设计，花了我两周时间。这是效果图
+                        </div>
+                        <div class="message-time-sent">12:20</div>
+                    </div>
+                </div>
+
+                <!-- 发送的图片消息 -->
+                <div class="message-row sent">
+                    <div>
+                        <div class="message-bubble sent">
+                            <img src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="项目截图" class="message-image">
+                        </div>
+                        <div class="message-time-sent">12:20</div>
+                    </div>
+                </div>
+
+                <!-- 接收的消息 -->
+                <div class="message-row received">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="小雪" class="message-avatar">
+                    <div>
+                        <div class="message-bubble received">
+                            哇，看起来非常专业！我喜欢这个配色方案，很有现代感。你在设计过程中遇到了什么挑战吗？
+                        </div>
+                        <div class="message-time-sent">12:22</div>
+                    </div>
+                </div>
+
+                <!-- 接收的消息带建议按钮 -->
+                <div class="message-row received">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="小雪" class="message-avatar">
+                    <div>
+                        <div class="message-bubble received">
+                            我可以帮你分析一下这个设计，或者我们可以聊聊其他话题？
+                        </div>
+                        <div class="message-actions">
+                            <button class="message-action-button">分析设计</button>
+                            <button class="message-action-button">换个话题</button>
+                        </div>
+                        <div class="message-time-sent">12:23</div>
+                    </div>
+                </div>
+
+                <!-- 正在输入指示器 -->
+                <div class="message-row received">
+                    <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        alt="小雪" class="message-avatar">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 聊天输入框 -->
+            <div class="chat-input-container">
+                <div class="chat-input-actions">
+                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-image"></i>
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <input type="text" class="chat-input" placeholder="输入消息...">
+                <i class="fas fa-paper-plane send-button"></i>
+            </div>
+        </div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>

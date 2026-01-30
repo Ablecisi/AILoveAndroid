@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主题颜色 -->
+    <color name="primary">#8A7AD8</color>
+    <color name="primary_light">#A29BD8</color>
+    <color name="primary_dark">#5C4B99</color>
+    <color name="primary_variant">#6C5DD3</color>
+    <color name="accent">#B39DDB</color>
+    <color name="secondary">#23243A</color>
+    <color name="secondary_light">#2D2E4A</color>
+    <color name="secondary_variant">#3A3B5A</color>
+
+    <!-- 文本颜色 -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
+    <color name="text_hint">#888888</color>
+    <color name="text_light">#666666</color>
+    <color name="text_disabled">#38FFFFFF</color>
+    <color name="text_profile_secondary">@color/primary</color>
+    <color name="text_profile_primary">#E6FFFFFF</color>
+
+    <!-- 背景颜色 -->
+    <color name="background">#181A20</color>
+    <color name="surface">#23243A</color>
+    <color name="card_background">#CCFFFFFF</color>
+    <color name="divider">#33344A</color>
+
+    <!-- 社交媒体颜色（保持不变） -->
+    <color name="wechat_green">#07C160</color>
+    <color name="qq_blue">#12B7F5</color>
+    <color name="weibo_red">#E6162D</color>
+
+    <!-- 其他颜色 -->
+    <color name="pink_400">#EC407A</color>
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FFC107</color>
+    <color name="error">#F44336</color>
+    <color name="white">#FFFFFF</color>
+    <color name="grey">#44475A</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- 状态颜色 -->
+    <color name="online">#4CD964</color>
+    <color name="offline">#666666</color>
+
+    <!-- 聊天消息颜色 -->
+    <color name="message_received_bg">#23243A</color>
+    <color name="typing_indicator">#666666</color>
+
+    <!-- 阴影颜色 -->
+    <color name="shadow">#C9C9C9</color>
+
+    <color name="navigation_bottom">@color/surface</color>
+</resources>

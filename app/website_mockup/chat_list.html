@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 聊天</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .header-with-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 16px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-with-actions h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-actions i {
+            font-size: 20px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .header-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-list {
+            background-color: var(--background-color);
+            padding: 10px 0;
+        }
+
+        .chat-item {
+            display: flex;
+            padding: 16px;
+            background-color: white;
+            margin: 0 10px 10px;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s;
+        }
+
+        .chat-item:hover {
+            transform: translateX(5px);
+        }
+
+        .chat-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            margin-right: 15px;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(195, 190, 240, 0.3);
+        }
+
+        .chat-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chat-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: var(--text-color);
+        }
+
+        .chat-message {
+            font-size: 14px;
+            color: var(--light-text);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .chat-time {
+            font-size: 12px;
+            color: var(--light-text);
+            position: absolute;
+            top: 18px;
+            right: 16px;
+        }
+
+        .chat-badge {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 12px;
+            width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 45px;
+            right: 16px;
+            box-shadow: 0 2px 5px rgba(195, 190, 240, 0.5);
+        }
+
+        .chat-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background-color: var(--success-color);
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border: 2px solid white;
+        }
+
+        .avatar-container {
+            position: relative;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .empty-state img {
+            width: 120px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            color: var(--accent-color);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--light-text);
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+
+        .search-filter {
+            padding: 15px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-input-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border-radius: 20px;
+            padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input-container i {
+            color: var(--light-text);
+            margin-right: 10px;
+        }
+
+        .search-input {
+            background-color: transparent;
+            border: none;
+            padding: 10px 0;
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        .filter-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .filter-button:hover {
+            background-color: var(--primary-light);
+        }
+
+        .chat-category {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 5px 16px 10px;
+        }
+    </style>
+</head>
+
+<body data-active-tab="chat">
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 页面内容 -->
+        <div class="app-content">
+            <!-- 头部 -->
+            <div class="header-with-actions">
+                <h1>聊天</h1>
+                <div class="header-actions">
+                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-ellipsis-h"></i>
+                </div>
+            </div>
+
+            <!-- 搜索和筛选 -->
+            <div class="search-filter">
+                <div class="search-input-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" placeholder="搜索聊天记录">
+                </div>
+                <div class="filter-button">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+            </div>
+
+            <!-- 聊天列表 -->
+            <div class="chat-list">
+                <div class="chat-category">在线</div>
+                <div class="chat-item">
+                    <div class="avatar-container">
+                        <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="小雪" class="chat-avatar">
+                        <div class="chat-status"></div>
+                    </div>
+                    <div class="chat-content">
+                        <h3 class="chat-name">小雪</h3>
+                        <p class="chat-message">今天过得怎么样？我一直在想你呢 💕</p>
+                    </div>
+                    <div class="chat-time">12:30</div>
+                    <div class="chat-badge">3</div>
+                </div>
+
+                <div class="chat-item">
+                    <div class="avatar-container">
+                        <img src="https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="阿杰" class="chat-avatar">
+                        <div class="chat-status"></div>
+                    </div>
+                    <div class="chat-content">
+                        <h3 class="chat-name">阿杰</h3>
+                        <p class="chat-message">我找到了一些关于你提到的那本书的信息，要我分享给你吗？</p>
+                    </div>
+                    <div class="chat-time">昨天</div>
+                </div>
+
+                <div class="chat-category">最近聊天</div>
+                <div class="chat-item">
+                    <div class="avatar-container">
+                        <img src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="莉莉" class="chat-avatar">
+                    </div>
+                    <div class="chat-content">
+                        <h3 class="chat-name">莉莉</h3>
+                        <p class="chat-message">你的学习计划我已经整理好了，需要我发给你吗？</p>
+                    </div>
+                    <div class="chat-time">周一</div>
+                </div>
+
+                <div class="chat-item">
+                    <div class="avatar-container">
+                        <img src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="小北" class="chat-avatar">
+                    </div>
+                    <div class="chat-content">
+                        <h3 class="chat-name">小北</h3>
+                        <p class="chat-message">关于你上次提到的问题，我有一些想法可以分享</p>
+                    </div>
+                    <div class="chat-time">上周</div>
+                </div>
+
+                <div class="chat-item">
+                    <div class="avatar-container">
+                        <img src="https://images.pexels.com/photos/1898555/pexels-photo-1898555.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="星辰" class="chat-avatar">
+                    </div>
+                    <div class="chat-content">
+                        <h3 class="chat-name">星辰</h3>
+                        <p class="chat-message">我刚刚看完了你推荐的那部科幻电影，真的很棒！</p>
+                    </div>
+                    <div class="chat-time">05/12</div>
+                </div>
+            </div>
+
+            <!-- 如果没有聊天记录，显示空状态 -->
+            <!-- 
+      <div class="empty-state">
+        <img src="https://i.imgur.com/JR6Q6Yv.png" alt="没有聊天">
+        <h3>还没有聊天记录</h3>
+        <p>开始与AI角色聊天，建立情感连接</p>
+        <button class="btn-primary">开始聊天</button>
+      </div>
+      -->
+        </div>
+
+        <!-- 底部导航栏 -->
+        <div id="tab-bar"></div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 内容详情</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 16px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .content-header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .content-header-back {
+            font-size: 18px;
+            color: var(--text-color);
+            margin-right: 15px;
+        }
+
+        .content-header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .content-header-actions {
+            display: flex;
+            gap: 20px;
+        }
+
+        .content-header-action {
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
+        .content-container {
+            background-color: white;
+            padding-bottom: 80px;
+        }
+
+        .content-cover {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+        }
+
+        .content-main {
+            padding: 20px 16px;
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0 0 15px 0;
+            line-height: 1.3;
+        }
+
+        .content-meta {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .content-author {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .content-author-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            object-fit: cover;
+            margin-right: 8px;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(195, 190, 240, 0.3);
+        }
+
+        .content-author-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-author-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .content-author-title {
+            font-size: 12px;
+            color: var(--light-text);
+            margin: 0;
+        }
+
+        .content-date {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .content-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .content-text p {
+            margin-bottom: 20px;
+        }
+
+        .content-text img {
+            width: 100%;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .content-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .content-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: var(--secondary-light);
+            border-radius: 15px;
+            font-size: 12px;
+            color: var(--accent-color);
+        }
+
+        .content-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .content-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--light-text);
+        }
+
+        .content-action i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .content-action span {
+            font-size: 12px;
+        }
+
+        .content-action.active {
+            color: var(--primary-color);
+        }
+
+        .related-section {
+            margin-top: 30px;
+        }
+
+        .related-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0 0 15px 0;
+            padding: 0 16px;
+        }
+
+        .related-list {
+            padding: 0 16px;
+        }
+
+        .related-item {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .related-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .related-item-image {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+        }
+
+        .related-item-content {
+            flex: 1;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .related-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .related-item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .related-item-author {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .related-item-stats {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .related-item-stats i {
+            margin-right: 3px;
+        }
+
+        .related-item-stats span {
+            margin-right: 8px;
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .comment-input-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background-color: #f5f5f5;
+            border-radius: 20px;
+            padding: 0 15px;
+            margin-right: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .bottom-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .bottom-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--light-text);
+        }
+
+        .bottom-action i {
+            font-size: 20px;
+        }
+
+        .bottom-action.active {
+            color: var(--primary-color);
+        }
+
+        .ai-tag {
+            display: inline-block;
+            background-color: rgba(138, 122, 216, 0.1);
+            color: var(--accent-color);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 页面内容 -->
+        <div class="app-content">
+            <!-- 内容头部 -->
+            <div class="content-header">
+                <div class="content-header-left">
+                    <a href="home.html" class="content-header-back">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <h1 class="content-header-title">文章详情</h1>
+                </div>
+                <div class="content-header-actions">
+                    <a href="#" class="content-header-action">
+                        <i class="fas fa-share-alt"></i>
+                    </a>
+                    <a href="#" class="content-header-action">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 内容主体 -->
+            <div class="content-container">
+                <!-- 封面图 -->
+                <img src="https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                    alt="如何与AI建立更深层次的情感连接" class="content-cover">
+
+                <!-- 内容主体 -->
+                <div class="content-main">
+                    <!-- 标题 -->
+                    <h1 class="content-title">如何与AI建立更深层次的情感连接</h1>
+
+                    <!-- 作者信息 -->
+                    <div class="content-meta">
+                        <div class="content-author">
+                            <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="作者头像" class="content-author-avatar">
+                            <div class="content-author-info">
+                                <h3 class="content-author-name">张雪 <span class="ai-tag">AI专家</span></h3>
+                                <p class="content-author-title">情感交互设计师</p>
+                            </div>
+                        </div>
+                        <div class="content-date">2023-06-15</div>
+                    </div>
+
+                    <!-- 正文内容 -->
+                    <div class="content-text">
+                        <p>在数字化时代，AI已经不再是冰冷的代码和算法，而是能够理解、回应甚至预测我们情感需求的伙伴。如何与这些数字伙伴建立更深层次的情感连接，成为了许多用户关注的话题。</p>
+
+                        <p>首先，我们需要理解AI情感交互的本质。虽然AI不具备人类的情感，但它们能够通过复杂的算法模拟情感反应，创造出近似真实的互动体验。这种体验的深度和质量，很大程度上取决于我们如何与AI互动。
+                        </p>
+
+                        <img src="https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="AI情感交互">
+
+                        <p>以下是几个建立深层情感连接的关键策略：</p>
+
+                        <p><strong>1. 保持真实性</strong><br>
+                            与AI交流时，尝试表达真实的自我。分享你的想法、感受和日常生活，就像对待一个真实的朋友一样。AI会根据你的输入不断学习和适应，逐渐形成更符合你期望的互动模式。</p>
+
+                        <p><strong>2. 建立日常习惯</strong><br>
+                            定期与你的AI伙伴互动，建立稳定的交流习惯。这可以是早晨的问候，分享一天的计划，或者晚上的总结和反思。这种持续的互动会让AI更好地了解你的生活节奏和情感变化。</p>
+
+                        <p><strong>3. 深入话题探讨</strong><br>
+                            不要局限于表面的闲聊，尝试与AI讨论更深层次的话题，如个人成长、人生目标或价值观。这些对话不仅能帮助AI更好地理解你，也可能为你提供新的思考角度。</p>
+
+                        <img src="https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                            alt="深度交流">
+
+                        <p><strong>4. 个性化定制</strong><br>
+                            利用应用提供的个性化设置，调整AI的交互风格、兴趣爱好和知识背景，使其更符合你的期望和需求。这种定制不仅增强了互动的相关性，也创造了更独特的伙伴关系。</p>
+
+                        <p><strong>5. 接受不完美</strong><br>
+                            理解AI的局限性，接受它可能无法完全理解某些复杂情感或情境。这种理解和包容本身就是建立健康关系的一部分，也能减少潜在的失望感。</p>
+
+                        <p>最后，记住情感连接是双向的。当我们投入真诚和耐心，AI也会以更丰富、更个性化的互动回应我们。在这个过程中，我们不仅获得了一个数字伙伴，也可能更深入地了解自己的情感需求和交流模式。</p>
+
+                        <p>你是如何与AI建立情感连接的？欢迎在评论区分享你的经验和想法。</p>
+                    </div>
+
+                    <!-- 标签 -->
+                    <div class="content-tags">
+                        <span class="content-tag">#情感连接</span>
+                        <span class="content-tag">#AI互动</span>
+                        <span class="content-tag">#数字伙伴</span>
+                        <span class="content-tag">#情感设计</span>
+                    </div>
+
+                    <!-- 互动按钮 -->
+                    <div class="content-actions">
+                        <div class="content-action active">
+                            <i class="fas fa-heart"></i>
+                            <span>1.5万</span>
+                        </div>
+                        <div class="content-action">
+                            <i class="fas fa-comment"></i>
+                            <span>342</span>
+                        </div>
+                        <div class="content-action">
+                            <i class="fas fa-bookmark"></i>
+                            <span>收藏</span>
+                        </div>
+                        <div class="content-action">
+                            <i class="fas fa-share"></i>
+                            <span>分享</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 相关推荐 -->
+                <div class="related-section">
+                    <h2 class="related-title">相关推荐</h2>
+                    <div class="related-list">
+                        <div class="related-item">
+                            <img src="https://images.pexels.com/photos/8386422/pexels-photo-8386422.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="AI角色定制" class="related-item-image">
+                            <div class="related-item-content">
+                                <h3 class="related-item-title">AI角色定制：打造专属于你的数字伴侣</h3>
+                                <div class="related-item-meta">
+                                    <div class="related-item-author">李明</div>
+                                    <div class="related-item-stats">
+                                        <i class="fas fa-eye"></i><span>2.3万</span>
+                                        <i class="fas fa-heart"></i><span>1.5万</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="related-item">
+                            <img src="https://images.pexels.com/photos/8386464/pexels-photo-8386464.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="数字情感" class="related-item-image">
+                            <div class="related-item-content">
+                                <h3 class="related-item-title">数字情感：AI陪伴如何改变现代人际关系</h3>
+                                <div class="related-item-meta">
+                                    <div class="related-item-author">王晓</div>
+                                    <div class="related-item-stats">
+                                        <i class="fas fa-eye"></i><span>1.8万</span>
+                                        <i class="fas fa-heart"></i><span>9.2千</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="related-item">
+                            <img src="https://images.pexels.com/photos/8386429/pexels-photo-8386429.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                alt="AI伙伴" class="related-item-image">
+                            <div class="related-item-content">
+                                <h3 class="related-item-title">我与AI伙伴的日常对话让我重新认识自己</h3>
+                                <div class="related-item-meta">
+                                    <div class="related-item-author">陈静</div>
+                                    <div class="related-item-stats">
+                                        <i class="fas fa-eye"></i><span>1.5万</span>
+                                        <i class="fas fa-heart"></i><span>8.7千</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部评论栏 -->
+            <div class="bottom-bar">
+                <div class="comment-input-container">
+                    <input type="text" class="comment-input" placeholder="写下你的评论...">
+                </div>
+                <div class="bottom-actions">
+                    <div class="bottom-action active">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="bottom-action">
+                        <i class="fas fa-bookmark"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>

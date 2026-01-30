@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 圆形图片样式 -->
+    <style name="CircleImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+        <item name="cornerRadius">50dp</item>
+    </style>
+
+    <!-- 圆角图片样式 -->
+    <style name="RoundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+        <item name="cornerRadius">10dp</item>
+    </style>
+
+    <!-- 工具栏标题样式 -->
+    <style name="ToolbarTitle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="widget_home_chip_choice">
+        <item name="chipBackgroundColor">@drawable/widget_home_chip_choice</item>
+        <item name="android:textColor">@color/widget_home_chip_choice</item>
+
+        <item name="android:checkable">true</item>
+
+        <item name="chipIconVisible">false</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+
+        <item name="rippleColor">@color/transparent</item>
+    </style>
+
+    <style name="widget_home_chip_action">
+        <item name="chipBackgroundColor">@drawable/widget_home_chip_action</item>
+        <item name="android:textColor">@color/widget_home_chip_action</item>
+
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:checkable">false</item>
+        <item name="closeIconVisible">false</item>
+
+        <item name="rippleColor">@color/transparent</item>
+    </style>
+
+    <style name="RoundedTextInputLayout"
+        parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+    </style>
+
+    <style name="RoundedTextInputLayoutExposedDropdownMenu"
+        parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxCornerRadiusTopStart">10dp</item>
+        <item name="boxCornerRadiusTopEnd">10dp</item>
+        <item name="boxCornerRadiusBottomStart">10dp</item>
+        <item name="boxCornerRadiusBottomEnd">10dp</item>
+    </style>
+
+    <style name="WidgetChipFilter">
+        <item name="chipBackgroundColor">@color/widget_chip_filter_bg</item>
+        <item name="android:textColor">@color/widget_chip_filter</item>
+
+        <item name="android:checkable">true</item>
+
+        <item name="chipIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+
+        <item name="checkedIcon">@drawable/ic_check</item>
+        <item name="closeIconTint">@color/chip_close_tint</item>
+
+    </style>
+
+    <style name="WidgetChipFilter_NoIcon">
+        <item name="chipBackgroundColor">@color/widget_chip_filter_bg</item>
+        <item name="android:textColor">@color/widget_chip_filter</item>
+
+        <item name="android:checkable">true</item>
+
+        <item name="chipIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+
+        <item name="checkedIconVisible">false</item>
+    </style>
+
+    <style name="WidgetButtonOutlinedButton"
+        parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/button_outlined_button_text</item>
+        <item name="android:textSize">12sp</item>
+        <item name="iconTint">@null</item>
+        <item name="strokeWidth">@dimen/btn_stroke_size</item>
+        <item name="strokeColor">@color/button_outlined_stroke</item>
+    </style>
+
+    <style name="WidgetButtonFilledButton"/>
+
+</resources> 

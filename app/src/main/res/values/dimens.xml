@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 间距 -->
+    <dimen name="spacing_tiny">2dp</dimen>
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_normal">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">24dp</dimen>
+    <dimen name="spacing_xxlarge">32dp</dimen>
+    <dimen name="spacing_xxxlarge">48dp</dimen>
+
+    <!-- 文字大小 -->
+    <dimen name="text_tiny">12sp</dimen>
+    <dimen name="text_small">14sp</dimen>
+    <dimen name="text_medium">16sp</dimen>
+    <dimen name="text_normal">18sp</dimen>
+    <dimen name="text_large">24sp</dimen>
+    <dimen name="text_xlarge">32sp</dimen>
+    <dimen name="text_xxlarge">64sp</dimen>
+
+    <!-- 圆角 -->
+    <dimen name="radius_none">0dp</dimen>
+    <dimen name="radius_tiny">10dp</dimen>
+    <dimen name="radius_small">20dp</dimen>
+    <dimen name="radius_medium">30dp</dimen>
+    <dimen name="radius_normal">40dp</dimen>
+    <dimen name="radius_large">80dp</dimen>
+    <dimen name="radius_xlarge">200dp</dimen>
+    <dimen name="radius_circle">1000dp</dimen>
+
+    <!-- 头像尺寸 -->
+    <dimen name="avatar_tiny">16dp</dimen>
+    <dimen name="avatar_small">24dp</dimen>
+    <dimen name="avatar_medium">32dp</dimen>
+    <dimen name="avatar_normal">48dp</dimen>
+    <dimen name="avatar_large">56dp</dimen>
+    <dimen name="avatar_xlarge">64dp</dimen>
+    <dimen name="avatar_xxlarge">128dp</dimen>
+
+    <!-- 按钮尺寸 -->
+    <dimen name="button_tiny_width">50dp</dimen>
+    <dimen name="button_tiny_height">30dp</dimen>
+    <dimen name="button_small_width">60dp</dimen>
+    <dimen name="button_small_height">36dp</dimen>
+    <dimen name="button_medium_width">80dp</dimen>
+    <dimen name="button_medium_height">48dp</dimen>
+    <dimen name="button_normal_width">100dp</dimen>
+    <dimen name="button_normal_height">60dp</dimen>
+    <dimen name="button_large_width">200dp</dimen>
+    <dimen name="button_large_height">60dp</dimen>
+    <dimen name="button_xlarge_width">350dp</dimen>
+    <dimen name="button_xlarge_height">70dp</dimen>
+    <dimen name="button_xxlarge_width">600dp</dimen>
+    <dimen name="button_xxlarge_height">100dp</dimen>
+
+    <!-- 输入框尺寸 -->
+    <dimen name="input_tiny_width">50dp</dimen>
+    <dimen name="input_tiny_height">30dp</dimen>
+    <dimen name="input_small_width">60dp</dimen>
+    <dimen name="input_small_height">36dp</dimen>
+    <dimen name="input_medium_width">80dp</dimen>
+    <dimen name="input_medium_height">48dp</dimen>
+    <dimen name="input_normal_width">100dp</dimen>
+    <dimen name="input_normal_height">60dp</dimen>
+    <dimen name="input_large_width">200dp</dimen>
+    <dimen name="input_large_height">60dp</dimen>
+    <dimen name="input_xlarge_width">350dp</dimen>
+    <dimen name="input_xlarge_height">70dp</dimen>
+    <dimen name="input_xxlarge_width">600dp</dimen>
+    <dimen name="input_xxlarge_height">100dp</dimen>
+
+    <!-- 其他大小 -->
+    <dimen name="custom_none">0dp</dimen>
+    <dimen name="custom_tiny">10dp</dimen>
+    <dimen name="custom_small">20dp</dimen>
+    <dimen name="custom_medium">30dp</dimen>
+    <dimen name="custom_normal">60dp</dimen>
+    <dimen name="custom_large">120dp</dimen>
+    <dimen name="custom_xlarge">240dp</dimen>
+    <dimen name="custom_xxlarge">480dp</dimen>
+
+    <dimen name="btn_stroke_size">1dp</dimen>
+
+    <!-- 分割线尺寸 -->
+    <dimen name="divider_height">1dp</dimen>
+
+    <!-- 阴影尺寸 -->
+    <dimen name="shadow_tiny">1dp</dimen>
+    <dimen name="shadow_small">5dp</dimen>
+    <dimen name="shadow_medium">4dp</dimen>
+    <dimen name="shadow_normal">5dp</dimen>
+    <dimen name="shadow_large">8dp</dimen>
+    <dimen name="shadow_xlarge">16dp</dimen>
+    <dimen name="shadow_xxlarge">100dp</dimen>
+
+</resources> 

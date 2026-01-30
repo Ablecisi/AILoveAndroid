@@ -1,0 +1,129 @@
+plugins {
+    id 'com.android.application'
+    id 'dagger.hilt.android.plugin'
+    id 'androidx.navigation.safeargs'
+}
+
+android {
+    namespace 'com.ailianlian.ablecisi'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.ailianlian.ablecisi"
+        minSdk 28
+        targetSdk 36
+        versionCode 3
+        versionName "3.5.1"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
+    }
+
+    signingConfigs {
+        debug {
+            keyAlias 'key_for_app'
+            keyPassword 'ablecisi'
+            storeFile file('sig-adaptation/debug/keys.jks')
+            storePassword 'ablecisi'
+            storeType 'jks'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+
+    // AndroidX Core: 用于支持 Android 设备的核心功能
+    implementation libs.core.ktx
+    implementation libs.appcompat.v161
+
+    // Material Design: 用于实现 Material Design 组件
+    implementation libs.material.v1110
+    implementation libs.constraintlayout
+
+    // Navigation: 用于实现应用内导航
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+
+    // Room Database: 用于本地数据库存储
+    implementation libs.room.runtime
+    annotationProcessor libs.room.compiler
+
+    // Lifecycle: 用于管理 Android 组件的生命周期
+    implementation libs.lifecycle.viewmodel
+    implementation libs.lifecycle.livedata
+
+    // Hilt: 用于依赖注入
+    implementation libs.hilt.android
+    annotationProcessor libs.hilt.compiler
+
+    // Retrofit + OkHttp: 用于网络请求
+    implementation libs.retrofit
+    implementation libs.converter.gson
+    implementation libs.okhttp
+    implementation libs.logging.interceptor
+
+    // Glide: 用于图片加载
+    implementation libs.glide
+    annotationProcessor libs.compiler
+
+    // WebSocket: 用于实时通信
+    implementation libs.java.websocket
+
+    // ML Kit: 用于机器学习
+    implementation libs.smart.reply
+
+    // Firebase: 用于云存储和消息推送
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.analytics
+    implementation libs.firebase.messaging
+    implementation libs.firebase.storage
+
+    // CameraX: 用于相机功能
+    implementation libs.camera.core
+    implementation libs.camera.camera2
+    implementation libs.camera.lifecycle
+    implementation libs.camera.view
+
+    // Lottie: 用于动画效果
+    implementation libs.lottie
+
+    // Testing: 用于单元测试和 UI 测试
+    testImplementation libs.junit
+    androidTestImplementation libs.junit.v115
+    androidTestImplementation libs.espresso.core.v351
+    testImplementation libs.mockito.core
+
+    // SwipeRefreshLayout: 用于下拉刷新
+    implementation libs.swiperefreshlayout
+
+    // Paging 3: 用于分页加载数据
+    implementation libs.paging.runtime
+
+    // gson: 用于 JSON 解析
+    implementation libs.gson
+
+    // markdown: 用于 Markdown 渲染
+    implementation libs.markdown
+    implementation 'io.noties.markwon:image:4.6.2'
+    implementation 'io.noties.markwon:image-glide:4.6.2' // 用 Glide 加载图片
+    implementation 'io.noties.markwon:ext-tables:4.6.2'
+
+    // 导入本地 AAR 文件
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+} 

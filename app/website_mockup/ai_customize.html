@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI恋恋 - 定制AI角色</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .customize-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 16px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .back-button {
+            font-size: 20px;
+            margin-right: 15px;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+        }
+
+        .customize-title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            text-align: center;
+            color: var(--accent-color);
+        }
+
+        .save-button {
+            color: var(--primary-color);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .save-button:hover {
+            color: var(--accent-color);
+        }
+
+        .customize-container {
+            padding: 20px 16px;
+            background-color: var(--background-color);
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .customize-section {
+            background-color: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .customize-section-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to right, var(--primary-light), var(--secondary-light));
+        }
+
+        .customize-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .customize-section-description {
+            font-size: 14px;
+            color: var(--text-color);
+            margin: 5px 0 0 0;
+        }
+
+        .customize-section-content {
+            padding: 20px 16px;
+        }
+
+        .avatar-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .avatar-preview-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(195, 190, 240, 0.3);
+        }
+
+        .avatar-change {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .avatar-change:hover {
+            transform: scale(1.1);
+        }
+
+        .avatar-options {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            width: 100%;
+            padding: 10px 0;
+            scrollbar-width: none;
+        }
+
+        .avatar-options::-webkit-scrollbar {
+            display: none;
+        }
+
+        .avatar-option {
+            width: 70px;
+            height: 70px;
+            border-radius: 35px;
+            object-fit: cover;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .avatar-option:hover {
+            transform: scale(1.05);
+        }
+
+        .avatar-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(195, 190, 240, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(195, 190, 240, 0.3);
+            outline: none;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            min-height: 120px;
+            resize: vertical;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(195, 190, 240, 0.3);
+            outline: none;
+        }
+
+        .personality-traits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .personality-trait {
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .personality-trait:hover {
+            background-color: var(--secondary-light);
+        }
+
+        .personality-trait.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .personality-trait i {
+            margin-left: 8px;
+        }
+
+        .slider-container {
+            margin-top: 15px;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .interest-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .interest-tag {
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .interest-tag:hover {
+            background-color: var(--secondary-light);
+        }
+
+        .interest-tag.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .voice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .voice-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .voice-option:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .voice-option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(195, 190, 240, 0.1);
+        }
+
+        .voice-option-info {
+            flex: 1;
+        }
+
+        .voice-option-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: var(--text-color);
+        }
+
+        .voice-option-description {
+            font-size: 13px;
+            color: var(--light-text);
+            margin: 0;
+        }
+
+        .voice-option-play {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin-left: 10px;
+            transition: transform 0.2s;
+        }
+
+        .voice-option-play:hover {
+            transform: scale(1.1);
+        }
+
+        .create-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 16px 0;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(195, 190, 240, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .create-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(195, 190, 240, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="iphone-container">
+        <!-- 状态栏 -->
+        <div id="status-bar"></div>
+
+        <!-- 页面内容 -->
+        <div class="app-content">
+            <!-- 头部 -->
+            <div class="customize-header">
+                <a href="home.html" class="back-button">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                <h1 class="customize-title">定制AI角色</h1>
+                <span class="save-button">保存</span>
+            </div>
+
+            <!-- 定制内容 -->
+            <div class="customize-container">
+                <!-- 基本信息部分 -->
+                <div class="customize-section">
+                    <div class="customize-section-header">
+                        <h2 class="customize-section-title">基本信息</h2>
+                        <p class="customize-section-description">设置AI角色的基本信息和外观</p>
+                    </div>
+                    <div class="customize-section-content">
+                        <div class="avatar-selection">
+                            <div class="avatar-preview-container">
+                                <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="AI头像" class="avatar-preview">
+                                <div class="avatar-change">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                            </div>
+                            <div class="avatar-options">
+                                <img src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="头像选项" class="avatar-option selected">
+                                <img src="https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="头像选项" class="avatar-option">
+                                <img src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="头像选项" class="avatar-option">
+                                <img src="https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="头像选项" class="avatar-option">
+                                <img src="https://images.pexels.com/photos/1898555/pexels-photo-1898555.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                    alt="头像选项" class="avatar-option">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">角色名称</label>
+                            <input type="text" class="form-input" placeholder="给你的AI角色起个名字" value="小雪">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">角色类型</label>
+                            <input type="text" class="form-input" placeholder="例如：知心朋友、学习导师、情感顾问等" value="温柔女友">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 性格特点部分 -->
+                <div class="customize-section">
+                    <div class="customize-section-header">
+                        <h2 class="customize-section-title">性格特点</h2>
+                        <p class="customize-section-description">定义AI角色的性格和行为方式</p>
+                    </div>
+                    <div class="customize-section-content">
+                        <div class="form-group">
+                            <label class="form-label">性格描述</label>
+                            <textarea class="form-textarea"
+                                placeholder="描述AI角色的性格特点和行为方式">温柔体贴，善解人意，喜欢倾听，有时会撒娇，对生活充满热情，喜欢分享生活中的小确幸。</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">性格标签</label>
+                            <div class="personality-traits">
+                                <div class="personality-trait selected">温柔 <i class="fas fa-check"></i></div>
+                                <div class="personality-trait selected">体贴 <i class="fas fa-check"></i></div>
+                                <div class="personality-trait">活泼</div>
+                                <div class="personality-trait selected">善解人意 <i class="fas fa-check"></i></div>
+                                <div class="personality-trait">幽默</div>
+                                <div class="personality-trait">理性</div>
+                                <div class="personality-trait selected">感性 <i class="fas fa-check"></i></div>
+                                <div class="personality-trait">浪漫</div>
+                                <div class="personality-trait">冷静</div>
+                                <div class="personality-trait">热情</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">情感表达程度</label>
+                            <div class="slider-container">
+                                <div class="slider-labels">
+                                    <span class="slider-label">含蓄</span>
+                                    <span class="slider-label">适中</span>
+                                    <span class="slider-label">外向</span>
+                                </div>
+                                <input type="range" min="1" max="10" value="7" class="slider">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 兴趣爱好部分 -->
+                <div class="customize-section">
+                    <div class="customize-section-header">
+                        <h2 class="customize-section-title">兴趣爱好</h2>
+                        <p class="customize-section-description">设置AI角色的兴趣领域和专长</p>
+                    </div>
+                    <div class="customize-section-content">
+                        <div class="form-group">
+                            <label class="form-label">选择兴趣标签</label>
+                            <div class="interest-tags">
+                                <div class="interest-tag selected">音乐</div>
+                                <div class="interest-tag">电影</div>
+                                <div class="interest-tag selected">阅读</div>
+                                <div class="interest-tag">旅行</div>
+                                <div class="interest-tag selected">美食</div>
+                                <div class="interest-tag">艺术</div>
+                                <div class="interest-tag">体育</div>
+                                <div class="interest-tag">科技</div>
+                                <div class="interest-tag selected">摄影</div>
+                                <div class="interest-tag">时尚</div>
+                                <div class="interest-tag">游戏</div>
+                                <div class="interest-tag">健康</div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">专业知识领域</label>
+                            <input type="text" class="form-input" placeholder="例如：心理学、文学、音乐等" value="心理学、文学">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 语音设置部分 -->
+                <div class="customize-section">
+                    <div class="customize-section-header">
+                        <h2 class="customize-section-title">语音设置</h2>
+                        <p class="customize-section-description">选择AI角色的声音类型</p>
+                    </div>
+                    <div class="customize-section-content">
+                        <div class="voice-options">
+                            <div class="voice-option selected">
+                                <div class="voice-option-info">
+                                    <h3 class="voice-option-name">清甜女声</h3>
+                                    <p class="voice-option-description">温柔甜美的年轻女性声音</p>
+                                </div>
+                                <div class="voice-option-play">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
+                            </div>
+
+                            <div class="voice-option">
+                                <div class="voice-option-info">
+                                    <h3 class="voice-option-name">成熟女声</h3>
+                                    <p class="voice-option-description">沉稳优雅的成熟女性声音</p>
+                                </div>
+                                <div class="voice-option-play">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
+                            </div>
+
+                            <div class="voice-option">
+                                <div class="voice-option-info">
+                                    <h3 class="voice-option-name">活力女声</h3>
+                                    <p class="voice-option-description">充满活力的年轻女性声音</p>
+                                </div>
+                                <div class="voice-option-play">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
+                            </div>
+
+                            <div class="voice-option">
+                                <div class="voice-option-info">
+                                    <h3 class="voice-option-name">温柔男声</h3>
+                                    <p class="voice-option-description">温和亲切的年轻男性声音</p>
+                                </div>
+                                <div class="voice-option-play">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 创建按钮 -->
+                <button class="create-button">创建AI角色</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="components/common.js"></script>
+</body>
+
+</html>
