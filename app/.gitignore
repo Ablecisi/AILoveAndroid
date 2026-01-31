@@ -1,7 +1,7 @@
 /build
+/config/config.properties
 /sig-adaptation/debug/keys.jks
 /debug/output-metadata.json
 /debug/app-debug.apk
 /debug/app-debug.zip
 /debug/app-debug.rar
-config/config.properties
