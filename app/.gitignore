@@ -1,5 +1,5 @@
 /build
-/config/config.properties
+/src/main/assets/config/config.properties
 /sig-adaptation/debug/keys.jks
 /debug/output-metadata.json
 /debug/app-debug.apk
