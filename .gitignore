@@ -10,3 +10,4 @@
 local.properties
 .idea
 /app/src/main/assets/config/config.properties
+/app/src/main/assets/config/
