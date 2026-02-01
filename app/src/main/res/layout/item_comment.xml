@@ -136,7 +136,7 @@
             android:text="展开更多 v"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
         <!-- 收起按钮 -->
         <TextView
@@ -148,6 +148,6 @@
             android:text="收起 ^"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
-            android:visibility="gone" />
+            android:visibility="visible" />
     </LinearLayout>
 </LinearLayout> 

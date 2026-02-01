@@ -236,6 +236,7 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
     }
 
     private void updateArticleUI(Article article) {
+        isLoading(true);
         if (article == null) return;
 
         // 设置文章标题

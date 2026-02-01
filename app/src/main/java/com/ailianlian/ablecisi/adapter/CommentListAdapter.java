@@ -34,6 +34,10 @@ public class CommentListAdapter extends BaseAdapter<CommentItem, CommentListAdap
      */
     private static final int BASE_STEP = 5;
 
+    int showCount = 0;
+    int totalCount = 0;
+    int remainCount = 0;
+
     public interface Listener {
         void onReplyClick(CommentVO target);
 
@@ -281,7 +285,7 @@ public class CommentListAdapter extends BaseAdapter<CommentItem, CommentListAdap
         CommentVO vo = item.vo;
 
         // 缩进
-        int d = (vo.depth == null ? 0 : vo.depth);
+        int d = (vo.depth == null ? 0 : 1);
         h.root.setPadding(basePadding + indentPerDepth * d,
                 h.root.getPaddingTop(),
                 h.root.getPaddingRight(),
@@ -312,24 +316,24 @@ public class CommentListAdapter extends BaseAdapter<CommentItem, CommentListAdap
         // ===== 顶层的 三个按钮逻辑 =====
         if (item.isRoot()) {
             long rootId = getRootId(vo);
-            int shown = countShownDescendants(rootId);                   // 当前已显示子孙数
-            int total = vo.replyCount == null ? 0 : vo.replyCount;       // 后端给的总回复数
-            int remain = Math.max(0, total - shown);
+            showCount = countShownDescendants(rootId);                   // 当前已显示子孙数
+            totalCount = vo.replyCount == null ? 0 : vo.replyCount;       // 后端给的总回复数
+            remainCount = Math.max(0, totalCount - showCount);
 
-            if (shown == 0 && remain > 0) {
+            if (showCount == 0 && remainCount > 0) {
                 h.btnExpandReplies.setVisibility(View.VISIBLE);
                 h.btnLoadMoreReplies.setVisibility(View.GONE);
                 h.btnCollapseReplies.setVisibility(View.GONE);
-                h.btnExpandReplies.setText("展开" + remain + "条回复");
-            } else if (shown > 0 && remain > 0) {
+                h.btnExpandReplies.setText("展开" + remainCount + "条回复");
+            } else if (showCount > 0 && remainCount > 0) {
                 int clicks = rootExpandClicks.getOrDefault(rootId, 0);
                 int step = BASE_STEP * Math.max(1, clicks); // 已经点过了，至少 1
-                int next = Math.min(step, remain);
+                int next = Math.min(step, remainCount);
                 h.btnExpandReplies.setVisibility(View.GONE);
                 h.btnLoadMoreReplies.setVisibility(View.VISIBLE);
                 h.btnCollapseReplies.setVisibility(View.VISIBLE);
                 h.btnLoadMoreReplies.setText("再展开" + next + "条");
-            } else if (shown > 0) {
+            } else if (showCount > 0) {
                 h.btnExpandReplies.setVisibility(View.GONE);
                 h.btnLoadMoreReplies.setVisibility(View.GONE);
                 h.btnCollapseReplies.setVisibility(View.VISIBLE);
@@ -344,6 +348,9 @@ public class CommentListAdapter extends BaseAdapter<CommentItem, CommentListAdap
 
             // 点击事件
             h.btnExpandReplies.setOnClickListener(v -> {
+                showCount = countShownDescendants(rootId);                   // 当前已显示子孙数
+                totalCount = vo.replyCount == null ? 0 : vo.replyCount;       // 后端给的总回复数
+                remainCount = Math.max(0, totalCount - showCount);
 
                 // 1) 增加展开次数（第一次至少为 1）
                 int cur = rootExpandClicks.getOrDefault(rootId, 0);
