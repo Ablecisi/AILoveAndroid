@@ -70,8 +70,7 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
             showToast("文章ID不能为空");
             finish();
         }
-        articleViewModel.loadArticle(articleId); // 加载文章数据
-        articleViewModel.loadFollowStatus(articleId);
+        articleViewModel.loadArticle(articleId); // 加载文章数据（成功后拉取关注状态）
         articleViewModel.loadRelatedArticles(articleId);
         articleViewModel.loadComments(articleId);
     }
@@ -127,9 +126,8 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         // 关注按钮
         binding.btnFollow.setOnClickListener(v -> {
             isFollowing = !isFollowing;
-            System.out.println("当前关注状态: " + isFollowing);
             updateFollowButton(isFollowing);
-            articleViewModel.followAuthor(isFollowing); // 调用ViewModel方法处理关注逻辑
+            articleViewModel.followAuthor(isFollowing);
         });
 
         // 点赞按钮
@@ -300,13 +298,18 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
     }
 
     private void shareArticle() {
-        Article article = new Article();
-        if (article == null) return;
-
+        Article article = articleViewModel.getArticle().getValue();
+        if (article == null) {
+            return;
+        }
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, article.getTitle());
-        shareIntent.putExtra(Intent.EXTRA_TEXT, article.getTitle() + "\n\n" + article.getContent().substring(0, Math.min(100, article.getContent().length())) + "...");
+        String body = article.getTitle() + "\n\n";
+        if (article.getContent() != null && !article.getContent().isEmpty()) {
+            body += article.getContent().substring(0, Math.min(100, article.getContent().length())) + "...";
+        }
+        shareIntent.putExtra(Intent.EXTRA_TEXT, body);
         startActivity(Intent.createChooser(shareIntent, getString(R.string.article_share)));
     }
 

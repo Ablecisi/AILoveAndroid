@@ -11,7 +11,7 @@ import com.ailianlian.ablecisi.result.PageResult;
 import com.ailianlian.ablecisi.result.Result;
 import com.ailianlian.ablecisi.utils.HttpClient;
 import com.ailianlian.ablecisi.utils.JsonUtil;
-import com.google.common.reflect.TypeToken;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -93,7 +93,7 @@ public class CharacterRepository extends BaseRepository {
 
     public void update(long id, AiCharacterUpdateDTO body, DataCallback<Boolean> cb) {
         getExecutorService().execute(() ->
-                HttpClient.doPost(getContext(), "/character/update/" + id, body, new HttpClient.HttpCallback() {
+                HttpClient.doPut(getContext(), "/character/update/" + id, body, new HttpClient.HttpCallback() {
                     @Override
                     public void onSuccess(String response) {
                         try {

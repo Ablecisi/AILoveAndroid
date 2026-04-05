@@ -1,7 +1,11 @@
 package com.ailianlian.ablecisi.fragment;
 
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.ailianlian.ablecisi.R;
 import com.ailianlian.ablecisi.activity.CharacterCustomizeActivity;
+import com.ailianlian.ablecisi.constant.StatusCodeConstant;
 import com.ailianlian.ablecisi.activity.SettingsActivity;
 import com.ailianlian.ablecisi.adapter.CharacterSmallAdapter;
 import com.ailianlian.ablecisi.baseclass.BaseFragment;
@@ -21,6 +26,7 @@ import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.FragmentProfileBinding;
 import com.ailianlian.ablecisi.pojo.entity.AiCharacter;
 import com.ailianlian.ablecisi.pojo.entity.User;
+import com.ailianlian.ablecisi.constant.NetWorkPathConstant;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.viewmodel.ProfileViewModel;
 import com.bumptech.glide.Glide;
@@ -53,7 +59,6 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
         setupUI();
     }
 
-    // TODO 在这里添加更多的初始化逻辑，比如加载用户数据等
     @Override
     protected void setListeners() {
         // 设置头像编辑按钮
@@ -61,50 +66,21 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
             pickImageFromGallery();
         });
 
-        // 设置编辑资料按钮
-        binding.buttonEditProfile.setOnClickListener(v -> {
-            viewModel.editProfile("张三", "AI爱好者，喜欢探索新技术");
-        });
+        binding.buttonEditProfile.setOnClickListener(v -> showEditProfileDialog());
 
         // 设置分享按钮
         binding.buttonShare.setOnClickListener(v -> {
             shareProfile();
         });
 
-        // 设置关注、粉丝、帖子点击事件
-        binding.layoutFollowing.setOnClickListener(v -> {
-            showToast("关注列表功能尚未实现");
-        });
-
-        binding.layoutFollowers.setOnClickListener(v -> {
-            showToast("粉丝列表功能尚未实现");
-        });
-
-        binding.layoutPosts.setOnClickListener(v -> {
-            showToast("帖子列表功能尚未实现");
-        });
-
-        // 设置功能菜单点击事件
-        binding.cardFavorites.setOnClickListener(v -> {
-            showToast("收藏功能尚未实现");
-        });
-
-        binding.cardHistory.setOnClickListener(v -> {
-            showToast("历史记录功能尚未实现");
-        });
-
-        binding.cardWallet.setOnClickListener(v -> {
-            showToast("钱包功能尚未实现");
-        });
-
-        // 设置帮助和关于点击事件
-        binding.cardHelp.setOnClickListener(v -> {
-            showToast("帮助功能尚未实现");
-        });
-
-        binding.cardAbout.setOnClickListener(v -> {
-            showToast("关于功能尚未实现");
-        });
+        binding.layoutFollowing.setVisibility(View.GONE);
+        binding.layoutFollowers.setVisibility(View.GONE);
+        binding.layoutPosts.setVisibility(View.GONE);
+        binding.cardFavorites.setVisibility(View.GONE);
+        binding.cardHistory.setVisibility(View.GONE);
+        binding.cardWallet.setVisibility(View.GONE);
+        binding.cardHelp.setVisibility(View.GONE);
+        binding.cardAbout.setVisibility(View.GONE);
 
         // 设置设置按钮
         binding.buttonSettings.setOnClickListener(v -> {
@@ -135,21 +111,57 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
         if (requestCode == REQUEST_CODE_PICK_IMAGE && resultCode == FragmentActivity.RESULT_OK && data != null) {
             selectedAvatarUri = data.getData();
             Glide.with(this).load(selectedAvatarUri).into(binding.imageAvatar);
-            // TODO 实际项目中应上传图片到服务器并更新用户资料
+            if (selectedAvatarUri != null) {
+                viewModel.uploadAndSaveAvatar(selectedAvatarUri);
+            }
         }
     }
 
     private void setupUI() {
         viewModel.loadUserProfile();
+        viewModel.loadCharacters();
         setupTabs();// 设置标签页
         setupCharacterList(); // 设置角色列表适配器
+    }
+
+    private void showEditProfileDialog() {
+        User cur = viewModel.getUserProfile().getValue();
+        Context ctx = requireContext();
+        LinearLayout layout = new LinearLayout(ctx);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, pad);
+        EditText nameEt = new EditText(ctx);
+        nameEt.setHint("昵称");
+        if (cur != null && cur.getName() != null) {
+            nameEt.setText(cur.getName());
+        }
+        EditText descEt = new EditText(ctx);
+        descEt.setHint("个人简介");
+        if (cur != null && cur.getDescription() != null) {
+            descEt.setText(cur.getDescription());
+        }
+        layout.addView(nameEt);
+        layout.addView(descEt);
+        new AlertDialog.Builder(ctx)
+                .setTitle("编辑资料")
+                .setView(layout)
+                .setPositiveButton(android.R.string.ok, (d, w) ->
+                        viewModel.editProfile(
+                                nameEt.getText().toString().trim(),
+                                descEt.getText().toString().trim(),
+                                cur != null ? cur.getAvatarUrl() : null))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void shareProfile() {
         // 分享个人资料
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, "我在AI联联上的个人资料：https://www.ailianlian.com/u/" + viewModel.getUserProfile().getValue().getId());
+        User u = viewModel.getUserProfile().getValue();
+        String base = NetWorkPathConstant.BASE_URL;
+        intent.putExtra(Intent.EXTRA_TEXT, "我在AI恋恋的个人资料：" + base + "/u/" + (u != null ? u.getId() : ""));
         startActivity(Intent.createChooser(intent, "分享个人资料"));
     }
 
@@ -180,8 +192,7 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
             binding.recyclerCharacters.setVisibility(View.GONE);
             binding.layoutMenu.setVisibility(View.GONE);
 
-            // TODO 实际项目中应加载帖子数据
-            showToast("帖子功能尚未实现");
+            showToast(getString(R.string.feature_not_available));
         });
 
         // 设置角色标签点击事件
@@ -244,6 +255,12 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
     }
 
     private void observeViewModel() {
+        viewModel.getResultMutableLiveData().observe(getViewLifecycleOwner(), result -> {
+            if (result != null && result.getCode() != StatusCodeConstant.SUCCESS
+                    && result.getMsg() != null && !result.getMsg().isEmpty()) {
+                showToast(result.getMsg());
+            }
+        });
         // 观察用户资料变化
         viewModel.getUserProfile().observe(getViewLifecycleOwner(), this::updateUserProfile);
 

@@ -91,12 +91,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         // 账号安全
         findViewById(R.id.layoutSecurity).setOnClickListener(v -> {
-            Toast.makeText(this, "账号安全功能尚未实现", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show();
         });
 
         // 隐私设置
         findViewById(R.id.layoutPrivacy).setOnClickListener(v -> {
-            Toast.makeText(this, "隐私设置功能尚未实现", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show();
         });
 
         // 消息通知开关

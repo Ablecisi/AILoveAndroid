@@ -33,13 +33,19 @@ import java.util.Date;
  */
 public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder> {
 
-    private final String characterAvatar;
-    private final String userAvatar;
+    private String characterAvatar;
+    private String userAvatar;
 
     public MessageAdapter(String characterAvatar, String userAvatar) {
         super(new MessageDiffCallback());
-        this.characterAvatar = characterAvatar;
-        this.userAvatar = userAvatar;
+        this.characterAvatar = characterAvatar != null ? characterAvatar : "";
+        this.userAvatar = userAvatar != null ? userAvatar : "";
+    }
+
+    public void setAvatars(String characterAvatar, String userAvatar) {
+        this.characterAvatar = characterAvatar != null ? characterAvatar : "";
+        this.userAvatar = userAvatar != null ? userAvatar : "";
+        notifyDataSetChanged();
     }
 
     @Override

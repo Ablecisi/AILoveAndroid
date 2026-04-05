@@ -1,6 +1,7 @@
 package com.ailianlian.ablecisi.baseclass;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit;
  * 23:29
  */
 public class BaseRepository {
+    private static final String TAG = "BaseRepository";
+
     private final ExecutorService executorService;
 
     private Context context;
@@ -80,7 +83,7 @@ public class BaseRepository {
         if (context != null) {
             context = null; // 清理上下文引用
         }
-        System.out.println("BaseRepository: ExecutorService has been shut down and context cleared.");
+        Log.i(TAG, "ExecutorService shut down, context cleared");
     }
 
 }

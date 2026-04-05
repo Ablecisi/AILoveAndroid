@@ -84,7 +84,7 @@ public class ChatDetailViewModel extends BaseViewModel {
         ChatSendDTO chatSendDTO = new ChatSendDTO();
         chatSendDTO.characterId = character.getValue() != null ? character.getValue().id : null;
         chatSendDTO.conversationId = Long.parseLong(conversationId);
-        chatSendDTO.userId = Long.parseLong(userId);
+        chatSendDTO.userId = null;
         chatSendDTO.text = content;
         // 创建并添加用户消息
         Message userMessage = new Message(

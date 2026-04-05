@@ -24,6 +24,9 @@
     <string name="agree_terms">登录即表示您同意我们的</string>
     <string name="terms_service">服务条款</string>
 
+    <string name="feature_not_available">该功能暂未开放</string>
+    <string name="chat_search_coming_soon">会话搜索功能开发中</string>
+
     <!-- 错误提示 -->
     <string name="error_empty_username">用户名不能为空</string>
     <string name="error_empty_password">密码不能为空</string>

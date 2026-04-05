@@ -1,12 +1,14 @@
 package com.ailianlian.ablecisi.viewmodel;
 
 import android.app.Application;
+import android.net.Uri;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.baseclass.BaseViewModel;
+import com.ailianlian.ablecisi.pojo.dto.UserProfileUpdateDTO;
 import com.ailianlian.ablecisi.pojo.entity.User;
 import com.ailianlian.ablecisi.pojo.vo.AiCharacterVO;
 import com.ailianlian.ablecisi.repository.CharacterRepository;
@@ -114,32 +116,85 @@ public class ProfileViewModel extends BaseViewModel {
     }
 
     /**
-     * 编辑用户资料
+     * 编辑用户资料（昵称 + 简介；头像 URL 可选）
      */
-    public void editProfile(String username, String description) {
-        // TODO: 保存资料到服务器
+    public void editProfile(String name, String description, String avatarUrl) {
         isLoading.setValue(true);
-
-        // 获取当前资料
         User currentProfile = userProfile.getValue();
-        if (currentProfile != null) {
-            // 更新资料
-            currentProfile.setUsername(username);
-            currentProfile.setDescription(description);
-
-            // 模拟网络请求保存资料
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000);
-                    userProfile.postValue(currentProfile);
-                    isLoading.postValue(false);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    isLoading.postValue(false);
-                }
-            }).start();
-        } else {
-            isLoading.setValue(false);
+        String av = avatarUrl;
+        if (av == null && currentProfile != null) {
+            av = currentProfile.getAvatarUrl();
         }
+        UserProfileUpdateDTO dto = new UserProfileUpdateDTO(name, description, av);
+        profileRepository.updateProfile(dto, new ProfileRepository.DataCallback<User>() {
+            @Override
+            public void onSuccess(User data) {
+                userProfile.postValue(data);
+                isLoading.postValue(false);
+            }
+
+            @Override
+            public void onError(String msg) {
+                getResultMutableLiveData().postValue(Result.error(msg));
+                isLoading.postValue(false);
+            }
+
+            @Override
+            public void onNetworkError() {
+                getResultMutableLiveData().postValue(Result.error("网络错误，请稍后重试"));
+                isLoading.postValue(false);
+            }
+        });
     }
-} 
+
+    /**
+     * 相册选图后上传 OSS 并写入用户头像（昵称、简介保持不变）。
+     */
+    public void uploadAndSaveAvatar(Uri imageUri) {
+        if (imageUri == null) {
+            return;
+        }
+        isLoading.setValue(true);
+        profileRepository.uploadAvatarImage(imageUri, application.getContentResolver(),
+                new ProfileRepository.DataCallback<String>() {
+                    @Override
+                    public void onSuccess(String url) {
+                        User u = userProfile.getValue();
+                        String name = u != null && u.getName() != null ? u.getName() : "";
+                        String desc = u != null && u.getDescription() != null ? u.getDescription() : "";
+                        UserProfileUpdateDTO dto = new UserProfileUpdateDTO(name, desc, url);
+                        profileRepository.updateProfile(dto, new ProfileRepository.DataCallback<User>() {
+                            @Override
+                            public void onSuccess(User data) {
+                                userProfile.postValue(data);
+                                isLoading.postValue(false);
+                            }
+
+                            @Override
+                            public void onError(String msg) {
+                                getResultMutableLiveData().postValue(Result.error(msg));
+                                isLoading.postValue(false);
+                            }
+
+                            @Override
+                            public void onNetworkError() {
+                                getResultMutableLiveData().postValue(Result.error("网络错误，请稍后重试"));
+                                isLoading.postValue(false);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String msg) {
+                        getResultMutableLiveData().postValue(Result.error(msg));
+                        isLoading.postValue(false);
+                    }
+
+                    @Override
+                    public void onNetworkError() {
+                        getResultMutableLiveData().postValue(Result.error("网络错误，请稍后重试"));
+                        isLoading.postValue(false);
+                    }
+                });
+    }
+}

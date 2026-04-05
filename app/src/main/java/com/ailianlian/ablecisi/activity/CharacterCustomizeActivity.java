@@ -18,6 +18,7 @@ import com.ailianlian.ablecisi.baseclass.BaseActivity;
 import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.ActivityCharacterCustomizeBinding;
 import com.ailianlian.ablecisi.pojo.dto.AiCharacterCreateDTO;
+import com.ailianlian.ablecisi.pojo.dto.AiCharacterUpdateDTO;
 import com.ailianlian.ablecisi.pojo.entity.AiCharacter;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
@@ -34,6 +35,8 @@ import java.util.Objects;
  * AI角色定制页面
  */
 public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCustomizeBinding> {
+
+    private static final String TAG = "CharacterCustomize";
 
     private CharacterViewModel characterViewModel;
     private static final int REQUEST_IMAGE_PICK = 100; // 请求码，用于图片选择
@@ -74,7 +77,9 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
     protected void initData() {
         characterViewModel.loadCharacterTypes();
         setupTypeDropdown();// 设置角色类型下拉菜单
-        loadCharacters(characterId);// 设置角色信息（如果是编辑模式）
+        if (characterId != null && characterId > 0) {
+            loadCharacters(characterId);
+        }
         observeViewModel();// 观察ViewModel数据变化
     }
 
@@ -109,7 +114,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
             String customInterest = binding.editCustomInterest.getText() != null ?
                     binding.editCustomInterest.getText().toString().trim() : "";
             if (!TextUtils.isEmpty(customInterest)) {
-                System.out.println("customInterest = " + customInterest);
+                Log.d(TAG, "customInterest = " + customInterest);
                 addCustomInterestChip(customInterest);
                 binding.editCustomInterest.setText("");
             }
@@ -119,7 +124,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
         binding.buttonCreate.setOnClickListener(v -> {
             // 判断是否有id，如果有则是编辑模式，否则是创建模式
             if (characterId != null && characterId > 0) {
-                showToast("编辑角色功能尚未实现");
+                updateCharacter();
             } else {
                 createCharacter();
             }
@@ -144,7 +149,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
         // 观察创建成功状态
         characterViewModel.getCreateSuccess().observe(this, isSuccess -> {
             if (isSuccess) {
-                showToast("角色创建成功");
+                showToast(characterId != null && characterId > 0 ? "角色已保存" : "角色创建成功");
                 finish();
             }
         });
@@ -181,7 +186,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
                 character.setType(vo.typeName);
                 character.setCreatedAt(vo.createTime);
 
-                System.out.println("character = " + character);
+                Log.d(TAG, "character = " + character);
                 Log.i("CharacterCustomizeActivity", "Loaded character: " + character.getName());
                 binding.editName.setText(character.getName());
                 (binding.dropdownType).setText(character.getType(), false);
@@ -247,6 +252,86 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
         chip.setChecked(true);
         chip.setOnCloseIconClickListener(v -> binding.chipGroupInterests.removeView(chip));
         binding.chipGroupInterests.addView(chip);
+    }
+
+    private void updateCharacter() {
+        AiCharacterUpdateDTO body = new AiCharacterUpdateDTO();
+        body.id = characterId;
+        if (binding.editName.getText() == null || binding.editName.getText().toString().trim().isEmpty()) {
+            showToast("角色名称不能为空");
+            return;
+        }
+        body.name = binding.editName.getText().toString().trim();
+        long typeId = 1L;
+        for (String type : typesList) {
+            if (type.equals(binding.dropdownType.getText().toString().trim())) {
+                body.typeId = typeId;
+                break;
+            }
+            typeId++;
+        }
+        body.gender = binding.radioMale.isChecked() ? 0 :
+                binding.radioFemale.isChecked() ? 1 : 2;
+        String ageStr = Objects.requireNonNull(binding.editAge.getText()).toString().trim();
+        if (!TextUtils.isEmpty(ageStr)) {
+            try {
+                body.age = Integer.parseInt(ageStr);
+            } catch (Exception e) {
+                Toast.makeText(this, "年龄设置无效", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        if (selectedImageUri != null) {
+            body.imageUrl = selectedImageUri.toString();
+        } else if (characterViewModel.getCurrentCharacter().getValue() != null
+                && characterViewModel.getCurrentCharacter().getValue().imageUrl != null) {
+            body.imageUrl = characterViewModel.getCurrentCharacter().getValue().imageUrl;
+        } else {
+            body.imageUrl = "";
+        }
+        StringBuilder stb = new StringBuilder();
+        for (int i = 0; i < binding.chipGroupPersonality.getChildCount(); i++) {
+            Chip chip = (Chip) binding.chipGroupPersonality.getChildAt(i);
+            if (chip.isChecked()) {
+                if (stb.length() > 0) stb.append(",");
+                stb.append(chip.getText().toString());
+            }
+        }
+        body.traits = stb.toString();
+        body.personaDesc = binding.editPersonalityDesc.getText() != null ?
+                binding.editPersonalityDesc.getText().toString().trim() : "";
+        stb = new StringBuilder();
+        for (int i = 0; i < binding.chipGroupInterests.getChildCount(); i++) {
+            Chip chip = (Chip) binding.chipGroupInterests.getChildAt(i);
+            if (chip.isChecked()) {
+                if (stb.length() > 0) stb.append(",");
+                stb.append(chip.getText().toString());
+            }
+        }
+        body.interests = stb.toString();
+        body.backstory = binding.editBackground.getText() != null ?
+                binding.editBackground.getText().toString().trim() : "";
+        AiCharacterCreateDTO tmp = new AiCharacterCreateDTO();
+        tmp.name = body.name;
+        tmp.typeId = body.typeId;
+        tmp.age = body.age;
+        tmp.imageUrl = body.imageUrl;
+        tmp.traits = body.traits;
+        tmp.personaDesc = body.personaDesc;
+        tmp.interests = body.interests;
+        tmp.backstory = body.backstory;
+        String errorMsg = characterViewModel.validateCharacter(tmp);
+        if (errorMsg != null) {
+            Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.character_create)
+                .setMessage("确定保存对该角色的修改吗？")
+                .setPositiveButton(R.string.confirm, (dialog, which) ->
+                        characterViewModel.updateCharacter(characterId, body))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void createCharacter() {

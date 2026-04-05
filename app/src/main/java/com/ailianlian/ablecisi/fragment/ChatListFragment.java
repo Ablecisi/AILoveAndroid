@@ -9,9 +9,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import android.app.Application;
+
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.ailianlian.ablecisi.R;
 import com.ailianlian.ablecisi.activity.CharacterCustomizeActivity;
 import com.ailianlian.ablecisi.activity.ChatDetailActivity;
 import com.ailianlian.ablecisi.adapter.ConversationAdapter;
@@ -38,7 +41,10 @@ public class ChatListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        viewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
+        Application app = requireActivity().getApplication();
+        viewModel = new ViewModelProvider(this,
+                ViewModelProvider.AndroidViewModelFactory.getInstance(app))
+                .get(ChatListViewModel.class);
         
         setupRecyclerView();
         setupSwipeRefresh();
@@ -97,11 +103,11 @@ public class ChatListFragment extends Fragment {
     
     private void setupSearchBar() {
         binding.etSearch.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "搜索功能暂未实现", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.chat_search_coming_soon, Toast.LENGTH_SHORT).show();
         });
         
         binding.btnSlider.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "筛选功能暂未实现", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.chat_search_coming_soon, Toast.LENGTH_SHORT).show();
         });
     }
 

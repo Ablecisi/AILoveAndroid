@@ -12,6 +12,7 @@ import com.ailianlian.ablecisi.handler.TokenExpiredHandler;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -40,6 +41,7 @@ public class HttpClient {
     private static final String TAG = "HttpClient";
     private static final String BASE_URL = NetWorkPathConstant.BASE_URL + "/api";
     private static final int TIMEOUT = 30; // 超时时间，单位秒
+    private static final int UPLOAD_READ_TIMEOUT = 120; // 上传读超时（秒）
     private static final String TOKEN_TAG = "token";
     private static String TOKEN = "";
 
@@ -172,5 +174,93 @@ public class HttpClient {
             postFailure(context, callback, "网络错误: " + e.getMessage());
         }
 
+    }
+
+    public static <T> void doPut(Context context, String endpoint, T body, HttpCallback callback) {
+        TOKEN = LoginInfoUtil.getUserToken(context);
+        String url = BASE_URL + endpoint;
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader(TOKEN_TAG, TOKEN)
+                .put(RequestBody.create(JsonUtil.toJson(body), MediaType.parse("application/json; charset=utf-8")))
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                if (response.code() == 401 && response.body() != null) {
+                    String body401 = response.body().string();
+                    Log.w(TAG, "HTTP 401，走责任链解析 JSON: " + response.code());
+                    postSuccess(context, callback, body401);
+                    return;
+                }
+                postFailure(context, callback, "未知的状态码 " + response.code());
+                return;
+            }
+            if (response.body() == null) {
+                postFailure(context, callback, "响应体为空(null)");
+                return;
+            }
+            String respStr = response.body().string();
+            Log.i(TAG, "PUT 成功: " + response.code());
+            postSuccess(context, callback, respStr);
+        } catch (Exception e) {
+            Log.e(TAG, "网络请求失败: " + e.getMessage());
+            postFailure(context, callback, "网络错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * multipart 上传图片（字段名 file），走与普通请求相同的 token 与责任链。
+     */
+    public static void doMultipartImageUpload(Context context, String endpoint, byte[] fileBytes,
+                                              String fileName, String mimeType, HttpCallback callback) {
+        TOKEN = LoginInfoUtil.getUserToken(context);
+        String url = BASE_URL + endpoint;
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(UPLOAD_READ_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(UPLOAD_READ_TIMEOUT, TimeUnit.SECONDS)
+                .build();
+
+        String mt = mimeType != null && !mimeType.isEmpty() ? mimeType : "image/jpeg";
+        RequestBody fileBody = RequestBody.create(MediaType.parse(mt), fileBytes);
+        MultipartBody body = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", fileName, fileBody)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader(TOKEN_TAG, TOKEN)
+                .post(body)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                if (response.code() == 401 && response.body() != null) {
+                    String body401 = response.body().string();
+                    Log.w(TAG, "上传 401，走责任链解析 JSON");
+                    postSuccess(context, callback, body401);
+                    return;
+                }
+                postFailure(context, callback, "未知的状态码 " + response.code());
+                return;
+            }
+            if (response.body() == null) {
+                postFailure(context, callback, "响应体为空(null)");
+                return;
+            }
+            String respStr = response.body().string();
+            Log.i(TAG, "上传成功: " + response.code());
+            postSuccess(context, callback, respStr);
+        } catch (Exception e) {
+            Log.e(TAG, "上传失败: " + e.getMessage());
+            postFailure(context, callback, "网络错误: " + e.getMessage());
+        }
     }
 }

@@ -63,29 +63,20 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
             finish(); // 关闭Activity，返回上一页
         });
 
-        binding.btnMore.setOnClickListener(v -> {
-            Toast.makeText(this, "更多选项", Toast.LENGTH_SHORT).show();
-            // TODO: 显示更多选项菜单
-        });
+        binding.btnMore.setOnClickListener(v ->
+                Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show());
 
-        binding.btnPhone.setOnClickListener(v -> {
-            Toast.makeText(this, "拨打电话", Toast.LENGTH_SHORT).show();
-            // TODO: 拨打电话
-        });
+        binding.btnPhone.setOnClickListener(v ->
+                Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show());
 
-        binding.btnVideo.setOnClickListener(v -> {
-            Toast.makeText(this, "视频通话", Toast.LENGTH_SHORT).show();
-            // TODO: 视频通话
-        });
+        binding.btnVideo.setOnClickListener(v ->
+                Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show());
 
     }
 
     private void setupMessageList() {
-        // 初始化适配器（暂时使用默认头像）
-        adapter = new MessageAdapter(
-                "https://example.com/avatar1.jpg",
-                "https://example.com/user_avatar.jpg"
-        );
+        String userAv = LoginInfoUtil.getAvatarUrl(this);
+        adapter = new MessageAdapter("", userAv != null ? userAv : "");
 
         // 设置布局管理器
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -142,12 +133,8 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
                 .error(R.drawable.ic_profile)
                 .into(binding.ivAvatar);
 
-        // 更新适配器中的角色头像
-        adapter = new MessageAdapter(
-                aiCharacter.getImageUrl(),
-                LoginInfoUtil.getAvatarUrl(this)
-        );
-        binding.rvMessages.setAdapter(adapter);
+        String userAv = LoginInfoUtil.getAvatarUrl(this);
+        adapter.setAvatars(aiCharacter.getImageUrl(), userAv != null ? userAv : "");
     }
 
     private void updateMessages(List<Message> messages) {

@@ -5,8 +5,10 @@ import android.content.Context;
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
 import com.ailianlian.ablecisi.pojo.dto.ChatSendDTO;
+import com.ailianlian.ablecisi.pojo.entity.Conversation;
 import com.ailianlian.ablecisi.pojo.vo.AiCharacterVO;
 import com.ailianlian.ablecisi.pojo.vo.ChatReplyVO;
+import com.ailianlian.ablecisi.pojo.vo.DialogConversationDTO;
 import com.ailianlian.ablecisi.pojo.vo.MessageVO;
 import com.ailianlian.ablecisi.result.Result;
 import com.ailianlian.ablecisi.constant.NetWorkPathConstant;
@@ -20,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -180,6 +183,49 @@ public class ChatRepository extends BaseRepository {
             });
         });
 
+    }
+
+    public void listMyConversations(int page, int size, DataCallback<List<Conversation>> dataCallback) {
+        getExecutorService().execute(() -> {
+            String path = "/dialog/conversations?page=" + page + "&size=" + size;
+            HttpClient.doGet(getContext(), path, new HttpClient.HttpCallback() {
+                @Override
+                public void onSuccess(String response) {
+                    Type type = new TypeToken<Result<List<DialogConversationDTO>>>() {
+                    }.getType();
+                    Result<List<DialogConversationDTO>> result = JsonUtil.fromJson(response, type);
+                    if (result != null && result.getCode() == StatusCodeConstant.SUCCESS && result.getData() != null) {
+                        List<Conversation> out = new ArrayList<>();
+                        for (DialogConversationDTO d : result.getData()) {
+                            if (d == null || d.id == null) {
+                                continue;
+                            }
+                            String last = d.lastMsgAt != null && !d.lastMsgAt.isEmpty()
+                                    ? d.lastMsgAt.replace('T', ' ')
+                                    : (d.updateTime != null ? d.updateTime.replace('T', ' ') : "");
+                            out.add(new Conversation(
+                                    String.valueOf(d.id),
+                                    d.characterId != null ? String.valueOf(d.characterId) : "",
+                                    d.characterName != null ? d.characterName : "",
+                                    d.characterAvatar != null ? d.characterAvatar : "",
+                                    d.lastMessage != null ? d.lastMessage : "",
+                                    last,
+                                    0,
+                                    false
+                            ));
+                        }
+                        dataCallback.onSuccess(out);
+                    } else {
+                        dataCallback.onError(result != null ? result.getMsg() : "解析失败");
+                    }
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    dataCallback.onError(error);
+                }
+            });
+        });
     }
 
     public void loadCharacterInfo(Long conversationId, DataCallback<AiCharacterVO> dataCallback) {

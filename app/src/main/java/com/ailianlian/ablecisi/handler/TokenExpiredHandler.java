@@ -1,6 +1,7 @@
 package com.ailianlian.ablecisi.handler;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
 import com.ailianlian.ablecisi.result.Result;
@@ -21,10 +22,12 @@ import com.ailianlian.ablecisi.utils.LoginInfoUtil;
  * 21:14
  */
 public class TokenExpiredHandler extends AbstractHandler {
+    private static final String TAG = "TokenExpiredHandler";
+
     @Override
     public void handle(Context context, String response, HttpClient.HttpCallback callback) {
         Result<?> result = JsonUtil.fromJson(response, Result.class);
-        System.out.println("TokenExpiredHandler: 处理Token过期相关逻辑。\n当下服务器响应内容：" + response);
+        Log.w(TAG, "处理 Token 相关响应: " + response);
         if (result != null && result.getCode() == StatusCodeConstant.TOKEN_EXPIRED) {
             // 清除本地登录信息并跳转登录页
             LoginInfoUtil.logout(context);

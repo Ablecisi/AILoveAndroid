@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
+import com.ailianlian.ablecisi.pojo.dto.ArticleToggleDTO;
 import com.ailianlian.ablecisi.pojo.dto.UserFollowDTO;
 import com.ailianlian.ablecisi.pojo.entity.Article;
 import com.ailianlian.ablecisi.result.Result;
@@ -62,16 +63,10 @@ public class ArticleRepository extends BaseRepository {
     }
 
     /**
-     * 关注或取消关注作者
-     *
-     * @param userId      用户ID
-     * @param authorId    作者ID
-     * @param isFollowing 是否关注
-     * @param callback    数据回调
+     * 关注或取消关注作者（后端从 JWT 取当前用户，body 仅需 authorId + isFollowing）。
      */
-    public void followAuthor(String userId, String authorId, boolean isFollowing, DataCallback<Boolean> callback) {
+    public void followAuthor(String authorId, boolean isFollowing, DataCallback<Boolean> callback) {
         UserFollowDTO userFollowDTO = new UserFollowDTO();
-        userFollowDTO.setUserId(userId);
         userFollowDTO.setAuthorId(authorId);
         userFollowDTO.setFollowing(isFollowing);
         getExecutorService().execute(() -> {
@@ -154,5 +149,51 @@ public class ArticleRepository extends BaseRepository {
                 }
             });
         });
+    }
+
+    public void toggleArticleLike(long articleId, boolean like, DataCallback<Void> callback) {
+        ArticleToggleDTO body = new ArticleToggleDTO(articleId, like);
+        getExecutorService().execute(() ->
+                HttpClient.doPost(getContext(), "/article/like", body, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Type type = new TypeToken<Result<Object>>() {
+                        }.getType();
+                        Result<Object> result = JsonUtil.fromJson(response, type);
+                        if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
+                            callback.onSuccess(null);
+                        } else {
+                            callback.onError(result != null ? result.getMsg() : "操作失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        callback.onError(error);
+                    }
+                }));
+    }
+
+    public void toggleArticleCollect(long articleId, boolean collect, DataCallback<Void> callback) {
+        ArticleToggleDTO body = new ArticleToggleDTO(articleId, collect);
+        getExecutorService().execute(() ->
+                HttpClient.doPost(getContext(), "/article/collect", body, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Type type = new TypeToken<Result<Object>>() {
+                        }.getType();
+                        Result<Object> result = JsonUtil.fromJson(response, type);
+                        if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
+                            callback.onSuccess(null);
+                        } else {
+                            callback.onError(result != null ? result.getMsg() : "操作失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        callback.onError(error);
+                    }
+                }));
     }
 }

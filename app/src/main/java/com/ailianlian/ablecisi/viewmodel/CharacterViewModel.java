@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.baseclass.BaseViewModel;
 import com.ailianlian.ablecisi.pojo.dto.AiCharacterCreateDTO;
+import com.ailianlian.ablecisi.pojo.dto.AiCharacterUpdateDTO;
 import com.ailianlian.ablecisi.pojo.vo.AiCharacterVO;
 import com.ailianlian.ablecisi.repository.CharacterRepository;
 
@@ -135,6 +136,33 @@ public class CharacterViewModel extends BaseViewModel {
             @Override
             public void onNetworkError() {
                 characterTypes.postValue(Collections.emptyList());
+            }
+        });
+    }
+
+    public void updateCharacter(long id, AiCharacterUpdateDTO dto) {
+        isLoading.postValue(true);
+        characterRepository.update(id, dto, new BaseRepository.DataCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean data) {
+                isLoading.postValue(false);
+                if (Boolean.TRUE.equals(data)) {
+                    createSuccess.postValue(true);
+                } else {
+                    errorMessage.postValue("更新失败");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                isLoading.postValue(false);
+                errorMessage.postValue(error);
+            }
+
+            @Override
+            public void onNetworkError() {
+                isLoading.postValue(false);
+                errorMessage.postValue("网络异常，请检查您的网络连接");
             }
         });
     }

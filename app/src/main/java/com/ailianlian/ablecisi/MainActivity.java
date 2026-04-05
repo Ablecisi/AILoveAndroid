@@ -16,8 +16,13 @@ import androidx.navigation.ui.NavigationUI;
 import com.ailianlian.ablecisi.activity.LoginActivity;
 import com.ailianlian.ablecisi.constant.LoginSharedPreferencesConstant;
 import com.ailianlian.ablecisi.databinding.ActivityMainBinding;
+import com.ailianlian.ablecisi.utils.AppBootstrapCache;
+import com.ailianlian.ablecisi.utils.HttpClient;
+import com.ailianlian.ablecisi.utils.UserActivityPing;
 import com.ailianlian.ablecisi.viewmodel.LoginViewModel;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     private LoginViewModel loginViewModel;
@@ -53,6 +58,23 @@ public class MainActivity extends AppCompatActivity {
         // 设置底部导航
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
+        Executors.newSingleThreadExecutor().execute(() ->
+                HttpClient.doGet(MainActivity.this, "/app/bootstrap", new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        AppBootstrapCache.saveFromBootstrapResponse(MainActivity.this, response);
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                    }
+                }));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UserActivityPing.maybePing(this);
     }
     
     @Override

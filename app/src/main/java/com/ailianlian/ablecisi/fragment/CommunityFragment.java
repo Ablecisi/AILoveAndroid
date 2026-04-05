@@ -1,5 +1,7 @@
 package com.ailianlian.ablecisi.fragment;
 
+import android.app.Application;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,7 +37,10 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        viewModel = new ViewModelProvider(this).get(CommunityViewModel.class);
+        Application app = requireActivity().getApplication();
+        viewModel = new ViewModelProvider(this,
+                ViewModelProvider.AndroidViewModelFactory.getInstance(app))
+                .get(CommunityViewModel.class);
         
         setupRecyclerView();
         setupChipGroup();
@@ -75,22 +80,16 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     }
 
     private void setupFab() {
-        binding.fabCreatePost.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "创建新帖子功能即将上线", Toast.LENGTH_SHORT).show();
-            // TODO: 跳转到创建帖子页面
-        });
+        binding.fabCreatePost.setOnClickListener(v ->
+                Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show());
     }
 
     private void setupActionButtons() {
-        binding.btnSearch.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "搜索功能即将上线", Toast.LENGTH_SHORT).show();
-            // TODO: 跳转到搜索页面
-        });
-        
-        binding.btnNotification.setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "通知功能即将上线", Toast.LENGTH_SHORT).show();
-            // TODO: 跳转到通知页面
-        });
+        binding.btnSearch.setOnClickListener(v ->
+                Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show());
+
+        binding.btnNotification.setOnClickListener(v ->
+                Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show());
     }
 
     private void observeViewModel() {
@@ -116,14 +115,12 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
 
     @Override
     public void onPostClick(Post post) {
-        Toast.makeText(requireContext(), "查看帖子详情: " + post.getId(), Toast.LENGTH_SHORT).show();
-        // TODO: 跳转到帖子详情页
+        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onUserClick(Post post) {
-        Toast.makeText(requireContext(), "查看用户资料: " + post.getUser().getName(), Toast.LENGTH_SHORT).show();
-        // TODO: 跳转到用户资料页
+        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -135,14 +132,15 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
 
     @Override
     public void onCommentClick(Post post) {
-        Toast.makeText(requireContext(), "查看评论: " + post.getId(), Toast.LENGTH_SHORT).show();
-        // TODO: 跳转到评论页面
+        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onShareClick(Post post) {
-        Toast.makeText(requireContext(), "分享帖子: " + post.getId(), Toast.LENGTH_SHORT).show();
-        // TODO: 显示分享对话框
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_TEXT, post.getContent() != null ? post.getContent() : "");
+        startActivity(Intent.createChooser(send, getString(R.string.article_share)));
     }
 
     @Override

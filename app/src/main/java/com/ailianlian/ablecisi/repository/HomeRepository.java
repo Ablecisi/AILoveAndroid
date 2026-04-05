@@ -78,7 +78,7 @@ public class HomeRepository extends BaseRepository {
                     @Override
                     public void onSuccess(String response) {
                         try {
-                            Type type = new com.google.common.reflect.TypeToken<Result<PageResult<AiCharacterVO>>>() {
+                            Type type = new com.google.gson.reflect.TypeToken<Result<PageResult<AiCharacterVO>>>() {
                             }.getType();
                             Result<PageResult<AiCharacterVO>> r = JsonUtil.fromJson(response, type);
                             if (r != null && r.getCode() == StatusCodeConstant.SUCCESS)

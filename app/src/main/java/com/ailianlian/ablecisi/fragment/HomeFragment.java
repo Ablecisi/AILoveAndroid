@@ -1,6 +1,7 @@
 package com.ailianlian.ablecisi.fragment;
 
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -79,12 +80,8 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
     }
 
     private void setupSearchBarListener() {
-        binding.etSearch.setOnClickListener(v -> {
-            String query = binding.etSearch.getText().toString().trim();
-            if (!query.isEmpty()) {
-                showToast(query); // TODO: 替换为实际搜索逻辑
-            }
-        });
+        binding.etSearch.setOnClickListener(v ->
+                showToast(getString(R.string.chat_search_coming_soon)));
     }
 
     private void setupCategoryChips(List<String> categories) {
@@ -106,7 +103,7 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
     }
     private void setupCategoryChipsListener() {
         binding.categoryChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            System.out.println("选中的Chip ID: " + checkedIds);
+            Log.d(TAG, "选中的Chip ID: " + checkedIds);
             if (checkedIds.isEmpty()) {
                 return;
             }

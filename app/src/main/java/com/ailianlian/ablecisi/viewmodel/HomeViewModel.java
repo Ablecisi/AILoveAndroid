@@ -1,6 +1,7 @@
 package com.ailianlian.ablecisi.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -23,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class HomeViewModel extends BaseViewModel {
+
+    private static final String TAG = "HomeViewModel";
 
     private final HomeRepository repository;
     private final MutableLiveData<List<AiCharacter>> characters;
@@ -134,7 +137,7 @@ public class HomeViewModel extends BaseViewModel {
                     character.setCreatedAt(vo.createTime);
                     characterList.add(character);
                 });
-                System.out.println("AI角色加载成功: " + JsonUtil.toJson(characterList));
+                Log.d(TAG, "AI角色加载成功: " + JsonUtil.toJson(characterList));
                 // 根据当前分类过滤角色
                 characters.postValue(characterList);
                 allAiCharacters = characterList; // 保存所有AI角色数据
@@ -155,7 +158,7 @@ public class HomeViewModel extends BaseViewModel {
         repository.loadFeaturedContent(new HomeRepository.DataCallback<Article>() {
             @Override
             public void onSuccess(Article data) {
-                System.out.println("精选内容加载成功: " + JsonUtil.toJson(data));
+                Log.d(TAG, "精选内容加载成功: " + JsonUtil.toJson(data));
                 featuredContent.postValue(data);
             }
 
