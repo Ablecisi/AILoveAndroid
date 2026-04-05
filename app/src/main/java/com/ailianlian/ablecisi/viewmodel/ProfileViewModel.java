@@ -94,7 +94,7 @@ public class ProfileViewModel extends BaseViewModel {
     public void loadCharacters() {
         isLoading.setValue(true);
         Long userId = Long.parseLong(getCurrentUserId(application));
-        characterRepository.list(userId, null, null, null, 1, 10, new BaseRepository.DataCallback<PageResult<AiCharacterVO>>() {
+        characterRepository.list(userId, null, null, null, 1, 100, new BaseRepository.DataCallback<PageResult<AiCharacterVO>>() {
             @Override
             public void onSuccess(PageResult<AiCharacterVO> data) {
                 characters.postValue(data.getRecords());

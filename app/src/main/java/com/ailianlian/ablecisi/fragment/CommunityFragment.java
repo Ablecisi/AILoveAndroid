@@ -1,5 +1,6 @@
 package com.ailianlian.ablecisi.fragment;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,13 +10,18 @@ import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.ailianlian.ablecisi.R;
+import com.ailianlian.ablecisi.activity.CreatePostActivity;
+import com.ailianlian.ablecisi.activity.PostDetailActivity;
 import com.ailianlian.ablecisi.adapter.PostAdapter;
+import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.FragmentCommunityBinding;
 import com.ailianlian.ablecisi.pojo.entity.Post;
 import com.ailianlian.ablecisi.viewmodel.CommunityViewModel;
@@ -27,6 +33,13 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     private CommunityViewModel viewModel;
     private PostAdapter adapter;
 
+    private final ActivityResultLauncher<Intent> createPostLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && viewModel != null) {
+                    viewModel.refreshPosts();
+                }
+            });
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCommunityBinding.inflate(inflater, container, false);
@@ -36,12 +49,12 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+
         Application app = requireActivity().getApplication();
         viewModel = new ViewModelProvider(this,
                 ViewModelProvider.AndroidViewModelFactory.getInstance(app))
                 .get(CommunityViewModel.class);
-        
+
         setupRecyclerView();
         setupChipGroup();
         setupSwipeRefresh();
@@ -73,15 +86,13 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light
         );
-        
-        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
-            viewModel.refreshPosts();
-        });
+
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refreshPosts());
     }
 
     private void setupFab() {
         binding.fabCreatePost.setOnClickListener(v ->
-                Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show());
+                createPostLauncher.launch(new Intent(requireContext(), CreatePostActivity.class)));
     }
 
     private void setupActionButtons() {
@@ -93,16 +104,18 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     }
 
     private void observeViewModel() {
-        viewModel.getPosts().observe(getViewLifecycleOwner(), posts -> {
-            adapter.submitList(posts);
+        viewModel.getPosts().observe(getViewLifecycleOwner(), posts -> adapter.submitList(posts));
+
+        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading ->
+                binding.swipeRefreshLayout.setRefreshing(Boolean.TRUE.equals(isLoading)));
+
+        viewModel.getUserMessage().observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+            }
         });
-        
-        viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            binding.swipeRefreshLayout.setRefreshing(isLoading);
-        });
-        
+
         viewModel.getCurrentCategory().observe(getViewLifecycleOwner(), category -> {
-            // 根据当前分类更新UI
             for (int i = 0; i < binding.chipGroup.getChildCount(); i++) {
                 Chip chip = (Chip) binding.chipGroup.getChildAt(i);
                 if (chip.getText().toString().equals(category)) {
@@ -113,30 +126,38 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
         });
     }
 
+    private void openPostDetail(Post post) {
+        if (post == null || post.getId() == null) {
+            return;
+        }
+        Intent i = new Intent(requireContext(), PostDetailActivity.class);
+        i.putExtra(ExtrasConstant.EXTRA_POST_ID, post.getId());
+        startActivity(i);
+    }
+
     @Override
     public void onPostClick(Post post) {
-        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
+        openPostDetail(post);
     }
 
     @Override
     public void onUserClick(Post post) {
-        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
+        openPostDetail(post);
     }
 
     @Override
     public void onLikeClick(Post post, boolean isLiked) {
-        viewModel.likePost(post, isLiked);
-        String message = isLiked ? "已点赞" : "已取消点赞";
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        viewModel.requestToggleLike(post, isLiked);
     }
 
     @Override
     public void onCommentClick(Post post) {
-        Toast.makeText(requireContext(), R.string.feature_not_available, Toast.LENGTH_SHORT).show();
+        openPostDetail(post);
     }
 
     @Override
     public void onShareClick(Post post) {
+        viewModel.recordShare(post);
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType("text/plain");
         send.putExtra(Intent.EXTRA_TEXT, post.getContent() != null ? post.getContent() : "");
@@ -144,25 +165,27 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
     }
 
     @Override
-    public void onMoreClick(Post post, View view) {
-        PopupMenu popupMenu = new PopupMenu(requireContext(), view);
+    public void onMoreClick(Post post, View anchor) {
+        PopupMenu popupMenu = new PopupMenu(requireContext(), anchor);
         popupMenu.getMenuInflater().inflate(R.menu.menu_post_options, popupMenu.getMenu());
-        
+
         popupMenu.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.action_report) {
                 Toast.makeText(requireContext(), "举报帖子: " + post.getId(), Toast.LENGTH_SHORT).show();
                 return true;
             } else if (itemId == R.id.action_follow) {
-                boolean isFollowed = post.getUser().getFollowed();
-                post.getUser().setFollowed(!isFollowed);
-                String message = isFollowed ? "已取消关注" : "已关注";
-                Toast.makeText(requireContext(), message + ": " + post.getUser().getName(), Toast.LENGTH_SHORT).show();
+                if (post.getUser() == null) {
+                    Toast.makeText(requireContext(), "无法关注该作者", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                boolean isFollowed = Boolean.TRUE.equals(post.getUser().getFollowed());
+                viewModel.followPostAuthor(post, !isFollowed);
                 return true;
             }
             return false;
         });
-        
+
         popupMenu.show();
     }
 
@@ -171,4 +194,4 @@ public class CommunityFragment extends Fragment implements PostAdapter.PostInter
         super.onDestroyView();
         binding = null;
     }
-} 
+}

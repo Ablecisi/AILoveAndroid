@@ -26,7 +26,11 @@ public class CommentVO {
     public Long rootId;
     public Integer depth;
     public Integer likeCount;
+    /** 当前用户是否已点赞该评论 */
+    public Boolean liked;
     public Integer replyCount;
+    /** 根评论下全部子孙条数（不含根）；顶层列表由服务端填充，用于「展开 N 条」 */
+    public Integer descendantCount;
 
     public Boolean deleted;    // 用 Boolean 替代 is_deleted，语义更清晰
     public LocalDateTime createTime;

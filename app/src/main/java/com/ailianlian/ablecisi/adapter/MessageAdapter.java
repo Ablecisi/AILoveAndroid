@@ -1,6 +1,8 @@
 package com.ailianlian.ablecisi.adapter;
 
+import android.content.Context;
 import android.text.format.DateFormat;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +22,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import io.noties.markwon.Markwon;
+import io.noties.markwon.core.CorePlugin;
+import io.noties.markwon.ext.tables.TablePlugin;
+import io.noties.markwon.image.glide.GlideImagesPlugin;
+
 /**
  * ailianlian
  * com.ailianlian.ablecisi.adapter
@@ -33,11 +40,18 @@ import java.util.Date;
  */
 public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder> {
 
+    private final Markwon markwon;
     private String characterAvatar;
     private String userAvatar;
 
-    public MessageAdapter(String characterAvatar, String userAvatar) {
+    public MessageAdapter(Context context, String characterAvatar, String userAvatar) {
         super(new MessageDiffCallback());
+        Context app = context.getApplicationContext();
+        this.markwon = Markwon.builder(app)
+                .usePlugin(CorePlugin.create())
+                .usePlugin(GlideImagesPlugin.create(app))
+                .usePlugin(TablePlugin.create(app))
+                .build();
         this.characterAvatar = characterAvatar != null ? characterAvatar : "";
         this.userAvatar = userAvatar != null ? userAvatar : "";
     }
@@ -75,7 +89,7 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
         boolean showTimestamp = shouldShowTimestamp(position);
 
         if (holder.getItemViewType() == Message.TYPE_SENT) {
-            ((SentMessageViewHolder) holder).bind(message, showTimestamp);
+            ((SentMessageViewHolder) holder).bind(markwon, message, showTimestamp);
         } else {
             ((ReceivedMessageViewHolder) holder).bind(message, showTimestamp);
         }
@@ -102,8 +116,10 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        void bind(Message message, boolean showTimestamp) {
-            binding.tvMessage.setText(message.getContent());
+        void bind(Markwon markwon, Message message, boolean showTimestamp) {
+            String raw = message.getContent();
+            markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
+            binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
 
             // 设置时间戳
             if (showTimestamp) {
@@ -124,7 +140,9 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
         }
 
         void bind(Message message, boolean showTimestamp) {
-            binding.tvMessage.setText(message.getContent());
+            String raw = message.getContent();
+            markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
+            binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
 
             // 加载头像
             Glide.with(binding.ivAvatar.getContext())

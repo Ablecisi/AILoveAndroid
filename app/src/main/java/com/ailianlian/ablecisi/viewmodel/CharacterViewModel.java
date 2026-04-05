@@ -25,6 +25,7 @@ public class CharacterViewModel extends BaseViewModel {
     private final MutableLiveData<List<AiCharacterVO>> aiCharacters;
     private final MutableLiveData<Boolean> isLoading;
     private final MutableLiveData<Boolean> createSuccess;
+    private final MutableLiveData<Long> createdCharacterId;
     private final MutableLiveData<String> errorMessage;
     private final MutableLiveData<AiCharacterVO> currentCharacter;
     private final MutableLiveData<List<String>> characterTypes;
@@ -35,6 +36,7 @@ public class CharacterViewModel extends BaseViewModel {
         aiCharacters = new MutableLiveData<>(new ArrayList<>());
         isLoading = new MutableLiveData<>(false);
         createSuccess = new MutableLiveData<>(false);
+        createdCharacterId = new MutableLiveData<>(null);
         errorMessage = new MutableLiveData<>(null);
         currentCharacter = new MutableLiveData<>(null);
         characterTypes = new MutableLiveData<>(new ArrayList<>());
@@ -51,6 +53,10 @@ public class CharacterViewModel extends BaseViewModel {
 
     public LiveData<Boolean> getCreateSuccess() {
         return createSuccess;
+    }
+
+    public LiveData<Long> getCreatedCharacterId() {
+        return createdCharacterId;
     }
 
     public LiveData<String> getErrorMessage() {
@@ -100,10 +106,16 @@ public class CharacterViewModel extends BaseViewModel {
             return;
         }
         isLoading.postValue(true);
+        createdCharacterId.postValue(null);
         characterRepository.create(body, new BaseRepository.DataCallback<Long>() {
             @Override
             public void onSuccess(Long data) {
                 isLoading.postValue(false);
+                if (data == null) {
+                    errorMessage.postValue("创建成功但未返回角色ID");
+                    return;
+                }
+                createdCharacterId.postValue(data);
                 createSuccess.postValue(true);
             }
 

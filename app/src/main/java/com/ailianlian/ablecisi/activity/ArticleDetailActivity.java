@@ -1,7 +1,10 @@
 package com.ailianlian.ablecisi.activity;
 
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -16,6 +19,7 @@ import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.ActivityArticleDetailBinding;
 import com.ailianlian.ablecisi.pojo.entity.Article;
 import com.ailianlian.ablecisi.pojo.vo.CommentVO;
+import com.ailianlian.ablecisi.utils.CommentExpandStateStore;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
 import com.ailianlian.ablecisi.utils.MarkDownUtil;
@@ -23,10 +27,16 @@ import com.ailianlian.ablecisi.utils.TimeAgoUtil;
 import com.ailianlian.ablecisi.viewmodel.ArticleViewModel;
 import com.google.android.material.chip.Chip;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+
 /**
  * 文章详情页面
  */
 public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBinding> {
+
+    private static final long COMMENT_EXPAND_SAVE_DELAY_MS = 480;
 
     private CommentListAdapter commentListAdapter;
     private RelatedArticleAdapter relatedArticleAdapter;
@@ -35,6 +45,18 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
     private boolean isFollowing; // 当前关注状态
     private ArticleViewModel articleViewModel;
     private long articleCurrentRootCommentId; // 当前正在评论的根评论ID
+
+    private final Handler expandSaveHandler = new Handler(Looper.getMainLooper());
+    private final Runnable expandSaveRunnable = () -> {
+        if (articleId != null && commentListAdapter != null) {
+            CommentExpandStateStore.saveExpandedRootIds(getApplicationContext(), articleId,
+                    commentListAdapter.getExpandedRootIds());
+        }
+    };
+
+    /** 从本地恢复楼中楼展开：顺序请求，避免并发写适配器 */
+    private Iterator<Long> expandRestoreIterator;
+    private long pendingRestoreRootId = -1;
 
     @Override
     protected ActivityArticleDetailBinding getViewBinding() {
@@ -58,6 +80,15 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
 
         setupCommentAdapter();// 初始化评论适配器
         setupRelatedArticleAdapter(); // 初始化相关文章适配器
+
+        binding.swipeRefreshLayout.setColorSchemeResources(R.color.primary);
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (articleId != null) {
+                articleViewModel.refreshArticleDetailPull(articleId);
+            } else {
+                binding.swipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     @Override
@@ -76,6 +107,12 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
     }
 
     private void observeViewModel() {
+        articleViewModel.getDetailRefreshing().observe(this, refreshing -> {
+            if (refreshing != null) {
+                binding.swipeRefreshLayout.setRefreshing(Boolean.TRUE.equals(refreshing));
+            }
+        });
+
         // 观察文章数据变化
         articleViewModel.getArticle().observe(this, article -> {
             if (article != null) {
@@ -106,12 +143,19 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
                     || pageResult.getRecords() == null
                     || pageResult.getRecords().isEmpty();
             binding.tvNoComments.setVisibility(empty ? View.VISIBLE : View.GONE);
+            scheduleExpandStateRestore();
         });
 
         // 观察展开评论数据变化
         articleViewModel.getComments().observe(this, comments -> {
-            if (comments != null) {
-                commentListAdapter.onMoreLoaded(articleCurrentRootCommentId, comments);
+            if (comments == null) {
+                return;
+            }
+            long targetRoot = pendingRestoreRootId >= 0 ? pendingRestoreRootId : articleCurrentRootCommentId;
+            commentListAdapter.onMoreLoaded(targetRoot, comments);
+            if (pendingRestoreRootId >= 0) {
+                pendingRestoreRootId = -1;
+                postExpandRestoreAdvance();
             }
         });
 
@@ -122,6 +166,7 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
             }
             isLoading(false);
         });
+
     }
 
 
@@ -193,13 +238,15 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
 
             @Override
             public void onLikeClick(CommentVO target) {
-                // repo.like(target.id, ...) → 成功本地 +1 或刷新
-                articleViewModel.likeComment(String.valueOf(target.id)); // 点赞评论
+                if (target.id == null) {
+                    return;
+                }
+                articleViewModel.toggleCommentLike(target.id, Boolean.TRUE.equals(target.liked));
             }
 
             @Override
             public void onLoadMoreDepth(long rootId, String afterPathCursor, int size) {
-                // 加载更多子评论
+                pendingRestoreRootId = -1;
                 articleCurrentRootCommentId = rootId;
                 articleViewModel.getCommentsTree(rootId, afterPathCursor, size);
             }
@@ -314,6 +361,61 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         }
         shareIntent.putExtra(Intent.EXTRA_TEXT, body);
         startActivity(Intent.createChooser(shareIntent, getString(R.string.article_share)));
+    }
+
+    private void scheduleExpandStateRestore() {
+        expandRestoreIterator = null;
+        pendingRestoreRootId = -1;
+        if (TextUtils.isEmpty(articleId) || commentListAdapter == null) {
+            return;
+        }
+        Set<Long> saved = CommentExpandStateStore.loadExpandedRootIds(getApplicationContext(), articleId);
+        if (saved.isEmpty()) {
+            return;
+        }
+        expandRestoreIterator = new ArrayList<>(saved).iterator();
+        postExpandRestoreAdvance();
+    }
+
+    private void postExpandRestoreAdvance() {
+        binding.getRoot().post(this::expandRestoreAdvance);
+    }
+
+    private void expandRestoreAdvance() {
+        if (expandRestoreIterator == null || commentListAdapter == null) {
+            return;
+        }
+        while (expandRestoreIterator.hasNext()) {
+            long rootId = expandRestoreIterator.next();
+            if (!commentListAdapter.hasRoot(rootId)) {
+                continue;
+            }
+            if (commentListAdapter.getExpandedRootIds().contains(rootId)) {
+                continue;
+            }
+            articleCurrentRootCommentId = rootId;
+            pendingRestoreRootId = rootId;
+            articleViewModel.getCommentsTree(rootId, null, CommentListAdapter.firstExpandBatchSize());
+            return;
+        }
+        expandRestoreIterator = null;
+    }
+
+    @Override
+    protected void onStop() {
+        expandSaveHandler.removeCallbacks(expandSaveRunnable);
+        expandSaveHandler.postDelayed(expandSaveRunnable, COMMENT_EXPAND_SAVE_DELAY_MS);
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        expandSaveHandler.removeCallbacks(expandSaveRunnable);
+        if (articleId != null && commentListAdapter != null) {
+            CommentExpandStateStore.saveExpandedRootIds(getApplicationContext(), articleId,
+                    commentListAdapter.getExpandedRootIds());
+        }
+        super.onDestroy();
     }
 
     @Override

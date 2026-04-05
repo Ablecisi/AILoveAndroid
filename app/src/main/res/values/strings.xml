@@ -52,8 +52,18 @@
 
     <!-- 聊天相关 -->
     <string name="no_chats">暂无聊天记录</string>
-    <string name="start_chat">开始聊天</string>
-    <string name="new_chat">新建聊天</string>
+    <string name="start_chat">创建会话</string>
+    <string name="new_chat">创建会话</string>
+    <string name="create_conversation_title">创建会话</string>
+    <string name="create_conversation_pick_character">选择要聊天的 AI 角色</string>
+    <string name="create_conversation_tap_to_select">点击选择已有角色</string>
+    <string name="create_conversation_new_character">新建角色并选用</string>
+    <string name="create_conversation_title_hint">会话标题（可选）</string>
+    <string name="create_conversation_scene_hint">会话背景 / 场景（可选）</string>
+    <string name="create_conversation_submit">开始聊天</string>
+    <string name="create_conversation_character_selected">已选择：%1$s</string>
+    <string name="create_conversation_new_character_label">新建角色（ID %1$s）</string>
+    <string name="profile_my_ai_characters">我的 AI 角色</string>
     <string name="select_character">选择角色</string>
     <string name="message_hint">输入消息…</string>
     <string name="send">发送</string>
@@ -74,6 +84,10 @@
     <string name="hot">热门</string>
     <string name="latest">最新</string>
     <string name="create_post">发布动态</string>
+    <string name="post_detail_title">帖子详情</string>
+    <string name="post_no_comments">暂无评论</string>
+    <string name="post_comment_hint">写评论…</string>
+    <string name="post_publish_success">发布成功</string>
     <string name="like">点赞</string>
     <string name="comment">评论</string>
     <string name="share">分享</string>

@@ -76,7 +76,7 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
 
     private void setupMessageList() {
         String userAv = LoginInfoUtil.getAvatarUrl(this);
-        adapter = new MessageAdapter("", userAv != null ? userAv : "");
+        adapter = new MessageAdapter(this, "", userAv != null ? userAv : "");
 
         // 设置布局管理器
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);

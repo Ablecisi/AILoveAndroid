@@ -88,11 +88,8 @@ public class PostAdapter extends ListAdapter<Post, PostAdapter.PostViewHolder> {
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && listener != null) {
                     Post post = getItem(position);
-                    boolean newLikeState = !post.getLiked();
+                    boolean newLikeState = !Boolean.TRUE.equals(post.getLiked());
                     listener.onLikeClick(post, newLikeState);
-
-                    // 更新UI状态
-                    updateLikeState(post, newLikeState);
                 }
             });
 
@@ -119,16 +116,19 @@ public class PostAdapter extends ListAdapter<Post, PostAdapter.PostViewHolder> {
         }
 
         void bind(Post post, int position) {
-            // 设置用户信息
-            binding.tvUserName.setText(post.getUser().getName());
+            if (post.getUser() != null) {
+                String name = post.getUser().getName();
+                binding.tvUserName.setText(name != null && !name.isEmpty() ? name : "用户");
+                Glide.with(binding.ivUserAvatar.getContext())
+                        .load(post.getUser().getAvatarUrl())
+                        .placeholder(R.drawable.ic_profile)
+                        .error(R.drawable.ic_profile)
+                        .into(binding.ivUserAvatar);
+            } else {
+                binding.tvUserName.setText("用户");
+                binding.ivUserAvatar.setImageResource(R.drawable.ic_profile);
+            }
             binding.tvPostTime.setText(formatTimeAgo(post.getCreatedAt()));
-
-            // 加载用户头像
-            Glide.with(binding.ivUserAvatar.getContext())
-                    .load(post.getUser().getAvatarUrl())
-                    .placeholder(R.drawable.ic_profile)
-                    .error(R.drawable.ic_profile)
-                    .into(binding.ivUserAvatar);
 
             // 设置帖子内容
             binding.tvPostContent.setText(post.getContent());
@@ -163,8 +163,7 @@ public class PostAdapter extends ListAdapter<Post, PostAdapter.PostViewHolder> {
             binding.tvCommentCount.setText(String.valueOf(post.getCommentCount()));
             binding.tvShareCount.setText(String.valueOf(post.getShareCount()));
 
-            // 设置点赞状态
-            updateLikeState(post, post.getLiked());
+            updateLikeState(post, Boolean.TRUE.equals(post.getLiked()));
 
             // 添加或移除 100dp 高的 spacer，仅在最后一个帖子添加
             handleSpacerForPosition(position);
@@ -222,6 +221,9 @@ public class PostAdapter extends ListAdapter<Post, PostAdapter.PostViewHolder> {
     }
 
     private String formatTimeAgo(LocalDateTime date) {
+        if (date == null) {
+            return "";
+        }
         long now = System.currentTimeMillis();
         long time = Date.from(date.atZone(java.time.ZoneId.systemDefault()).toInstant()).getTime();
 
@@ -238,11 +240,11 @@ public class PostAdapter extends ListAdapter<Post, PostAdapter.PostViewHolder> {
 
         @Override
         public boolean areContentsTheSame(@NonNull Post oldItem, @NonNull Post newItem) {
-            return oldItem.getContent().equals(newItem.getContent()) &&
-                    oldItem.getLikeCount().equals(newItem.getLikeCount()) &&
-                    oldItem.getCommentCount().equals(newItem.getCommentCount()) &&
-                    !oldItem.getShareCount().equals(newItem.getShareCount()) ||
-                    !oldItem.getLiked().equals(newItem.getLiked());
+            return java.util.Objects.equals(oldItem.getContent(), newItem.getContent())
+                    && java.util.Objects.equals(oldItem.getLikeCount(), newItem.getLikeCount())
+                    && java.util.Objects.equals(oldItem.getCommentCount(), newItem.getCommentCount())
+                    && java.util.Objects.equals(oldItem.getShareCount(), newItem.getShareCount())
+                    && java.util.Objects.equals(oldItem.getLiked(), newItem.getLiked());
         }
     }
 

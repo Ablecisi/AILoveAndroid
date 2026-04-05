@@ -397,6 +397,52 @@
                                         android:layout_height="wrap_content"
                                         android:orientation="vertical">
 
+                                        <!-- 我的 AI 角色 -->
+                                        <LinearLayout
+                                            android:id="@+id/cardMyAiCharacters"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:background="?attr/selectableItemBackground"
+                                            android:gravity="center_vertical"
+                                            android:orientation="horizontal"
+                                            android:padding="16dp">
+
+                                            <FrameLayout
+                                                android:layout_width="36dp"
+                                                android:layout_height="36dp"
+                                                android:layout_marginEnd="15dp"
+                                                android:background="@drawable/bg_icon_container">
+
+                                                <ImageView
+                                                    android:layout_width="24dp"
+                                                    android:layout_height="24dp"
+                                                    android:layout_gravity="center"
+                                                    android:contentDescription="@string/profile_my_ai_characters"
+                                                    android:src="@drawable/ic_profile"
+                                                    app:tint="@color/primary" />
+                                            </FrameLayout>
+
+                                            <TextView
+                                                android:layout_width="0dp"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1"
+                                                android:text="@string/profile_my_ai_characters"
+                                                android:textColor="@color/text_primary"
+                                                android:textSize="15sp" />
+
+                                            <ImageView
+                                                android:layout_width="24dp"
+                                                android:layout_height="24dp"
+                                                android:contentDescription="@string/arrow_right"
+                                                android:src="@drawable/ic_arrow_right"
+                                                app:tint="@color/text_hint" />
+                                        </LinearLayout>
+
+                                        <View
+                                            android:layout_width="match_parent"
+                                            android:layout_height="1dp"
+                                            android:background="@color/divider" />
+
                                         <!-- 收藏 -->
                                         <LinearLayout
                                             android:id="@+id/cardFavorites"

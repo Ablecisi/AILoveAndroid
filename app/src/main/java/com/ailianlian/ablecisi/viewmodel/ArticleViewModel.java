@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 文章详情的ViewModel
@@ -37,6 +38,8 @@ public class ArticleViewModel extends BaseViewModel {
     private final MutableLiveData<String> errorMessage; // 错误信息
     private final MutableLiveData<Boolean> commentSuccess; // 评论是否成功
     private final MutableLiveData<Boolean> isFollowing; // 是否关注作者
+    /** 文章+评论下拉刷新进行中（用于 SwipeRefreshLayout） */
+    private final MutableLiveData<Boolean> detailRefreshing;
     private final ArticleRepository articleRepository; // 文章仓库
     private final CommentRepository commentRepository; // 评论仓库
     /** 避免同一次进入详情重复上报阅读 */
@@ -64,6 +67,10 @@ public class ArticleViewModel extends BaseViewModel {
         return isFollowing;
     }
 
+    public LiveData<Boolean> getDetailRefreshing() {
+        return detailRefreshing;
+    }
+
     public LiveData<PageResult<RootTreeVO>> getPageResultMutableLiveData() {
         return pageResultMutableLiveData;
     }
@@ -85,6 +92,7 @@ public class ArticleViewModel extends BaseViewModel {
         errorMessage = new MutableLiveData<>();
         commentSuccess = new MutableLiveData<>(false);
         isFollowing = new MutableLiveData<>(false);
+        detailRefreshing = new MutableLiveData<>(false);
         pageResultMutableLiveData = new MutableLiveData<>();
         comments = new MutableLiveData<>(new ArrayList<>());
         newComment = new MutableLiveData<>();
@@ -209,6 +217,7 @@ public class ArticleViewModel extends BaseViewModel {
             isLoading.postValue(false);
             return;
         }
+        final String currentArticleId = a != null ? a.getId() : null;
         articleRepository.followAuthor(authorId, isFollow, new BaseRepository.DataCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean ignored) {
@@ -216,6 +225,9 @@ public class ArticleViewModel extends BaseViewModel {
                 isFollowing.postValue(isFollow);
                 errorMessage.postValue(isFollow ? "已关注作者" : "已取消关注作者");
                 isLoading.postValue(false);
+                if (currentArticleId != null) {
+                    refreshArticleDetail(currentArticleId);
+                }
             }
 
             @Override
@@ -270,15 +282,17 @@ public class ArticleViewModel extends BaseViewModel {
             errorMessage.postValue("文章未加载完成");
             return;
         }
+        if (!LoginInfoUtil.isLoggedIn(getApplication())) {
+            errorMessage.postValue("请先登录后再点赞");
+            return;
+        }
         boolean next = !Boolean.TRUE.equals(a.getLiked());
         long id = Long.parseLong(a.getId());
+        final String articleId = a.getId();
         articleRepository.toggleArticleLike(id, next, new BaseRepository.DataCallback<Void>() {
             @Override
             public void onSuccess(Void data) {
-                a.setLiked(next);
-                int c = a.getLikeCount() != null ? a.getLikeCount() : 0;
-                a.setLikeCount(next ? c + 1 : Math.max(0, c - 1));
-                article.postValue(a);
+                refreshArticleDetail(articleId);
             }
 
             @Override
@@ -299,13 +313,17 @@ public class ArticleViewModel extends BaseViewModel {
             errorMessage.postValue("文章未加载完成");
             return;
         }
+        if (!LoginInfoUtil.isLoggedIn(getApplication())) {
+            errorMessage.postValue("请先登录后再收藏");
+            return;
+        }
         boolean next = !Boolean.TRUE.equals(a.getBookmarked());
         long id = Long.parseLong(a.getId());
+        final String articleId = a.getId();
         articleRepository.toggleArticleCollect(id, next, new BaseRepository.DataCallback<Void>() {
             @Override
             public void onSuccess(Void data) {
-                a.setBookmarked(next);
-                article.postValue(a);
+                refreshArticleDetail(articleId);
             }
 
             @Override
@@ -321,12 +339,59 @@ public class ArticleViewModel extends BaseViewModel {
     }
 
     /**
-     * 加载评论
-     *
-     * @param articleId 文章ID
+     * 互动后静默同步文章与评论（不显示下拉刷新圈）
      */
-    public void loadComments(String articleId) {
-        isLoading.postValue(true);
+    public void refreshArticleDetail(String articleId) {
+        refreshArticleDetailInternal(articleId, false);
+    }
+
+    /** 用户手动下拉刷新 */
+    public void refreshArticleDetailPull(String articleId) {
+        refreshArticleDetailInternal(articleId, true);
+    }
+
+    private void refreshArticleDetailInternal(String articleId, boolean showPullRefresh) {
+        if (articleId == null || articleId.isEmpty()) {
+            return;
+        }
+        if (showPullRefresh) {
+            detailRefreshing.postValue(true);
+        }
+        AtomicInteger pending = new AtomicInteger(2);
+        Runnable finish = () -> {
+            if (pending.decrementAndGet() <= 0) {
+                if (showPullRefresh) {
+                    detailRefreshing.postValue(false);
+                }
+            }
+        };
+        articleRepository.loadArticle(articleId, new BaseRepository.DataCallback<Article>() {
+            @Override
+            public void onSuccess(Article loadedArticle) {
+                article.postValue(loadedArticle);
+                loadFollowStatusForAuthor(loadedArticle != null ? loadedArticle.getAuthorId() : null);
+                finish.run();
+            }
+
+            @Override
+            public void onError(String error) {
+                errorMessage.postValue("文章加载失败: " + error);
+                finish.run();
+            }
+
+            @Override
+            public void onNetworkError() {
+                errorMessage.postValue("网络异常，请检查您的网络连接");
+                finish.run();
+            }
+        });
+        loadCommentsInternal(articleId, false, finish);
+    }
+
+    private void loadCommentsInternal(String articleId, boolean showMainLoading, Runnable onComplete) {
+        if (showMainLoading) {
+            isLoading.postValue(true);
+        }
         commentRepository.getBundle(
                 ArticleOrPostTypeConstant.TYPE_ARTICLE,
                 Long.parseLong(articleId),
@@ -340,23 +405,46 @@ public class ArticleViewModel extends BaseViewModel {
                         if (data != null) {
                             pageResultMutableLiveData.postValue(data);
                         }
-                        isLoading.postValue(false);
+                        if (showMainLoading) {
+                            isLoading.postValue(false);
+                        }
+                        if (onComplete != null) {
+                            onComplete.run();
+                        }
                     }
 
                     @Override
                     public void onError(String msg) {
-                        isLoading.postValue(false);
+                        if (showMainLoading) {
+                            isLoading.postValue(false);
+                        }
                         errorMessage.postValue("评论加载失败: " + msg);
+                        if (onComplete != null) {
+                            onComplete.run();
+                        }
                     }
 
                     @Override
                     public void onNetworkError() {
-                        isLoading.postValue(false);
+                        if (showMainLoading) {
+                            isLoading.postValue(false);
+                        }
                         errorMessage.postValue("网络异常，请检查您的网络连接");
+                        if (onComplete != null) {
+                            onComplete.run();
+                        }
                     }
                 }
         );
+    }
 
+    /**
+     * 加载评论
+     *
+     * @param articleId 文章ID
+     */
+    public void loadComments(String articleId) {
+        loadCommentsInternal(articleId, true, null);
     }
 
     /**
@@ -421,6 +509,7 @@ public class ArticleViewModel extends BaseViewModel {
                         newComment.postValue(data);
                         isLoading.postValue(false);
                         errorMessage.postValue("评论成功");
+                        refreshArticleDetail(articleId);
                     }
 
                     @Override
@@ -439,13 +528,24 @@ public class ArticleViewModel extends BaseViewModel {
 
     }
 
-    public void likeComment(String commentId) {
-        if (commentId == null || commentId.isEmpty()) {
+    /**
+     * 评论点赞/取消：已点赞则取消，否则点赞；成功后刷新文章与评论列表
+     */
+    public void toggleCommentLike(long commentId, boolean currentlyLiked) {
+        if (!LoginInfoUtil.isLoggedIn(getApplication())) {
+            errorMessage.postValue("请先登录后再点赞");
             return;
         }
-        commentRepository.like(Long.parseLong(commentId), new BaseRepository.DataCallback<Boolean>() {
+        Article a = article.getValue();
+        final String aid = a != null ? a.getId() : null;
+        if (aid == null) {
+            errorMessage.postValue("文章信息不可用");
+            return;
+        }
+        BaseRepository.DataCallback<Boolean> cb = new BaseRepository.DataCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean data) {
+                refreshArticleDetail(aid);
             }
 
             @Override
@@ -457,6 +557,11 @@ public class ArticleViewModel extends BaseViewModel {
             public void onNetworkError() {
                 errorMessage.postValue("网络异常");
             }
-        });
+        };
+        if (currentlyLiked) {
+            commentRepository.unlike(commentId, cb);
+        } else {
+            commentRepository.like(commentId, cb);
+        }
     }
 }

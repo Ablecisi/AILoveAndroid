@@ -14,7 +14,11 @@ package com.ailianlian.ablecisi.constant;
  */
 public class ExtrasConstant {
     public static final String EXTRA_ARTICLE_ID = "article_id"; // 文章ID
+    /** 社区帖子 ID（字符串，与接口 id 一致） */
+    public static final String EXTRA_POST_ID = "post_id";
     public static final String EXTRA_CHARACTER_ID = "character_id"; // AI角色ID
+    /** 为 true 时创建成功后通过 setResult 回传 {@link #EXTRA_CHARACTER_ID} */
+    public static final String EXTRA_RETURN_CHARACTER_ID = "return_character_id";
     public static final String EXTRA_TOPIC_ID = "topic_id"; // 话题ID
     public static final String EXTRA_CONVERSATION_ID = "conversation_id"; // 会话ID
     public static final String EXTRA_SEARCH_QUERY = "search_query"; // 搜索查询字符串

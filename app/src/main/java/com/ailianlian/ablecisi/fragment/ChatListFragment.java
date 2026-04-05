@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.ailianlian.ablecisi.R;
-import com.ailianlian.ablecisi.activity.CharacterCustomizeActivity;
+import com.ailianlian.ablecisi.activity.CreateConversationActivity;
 import com.ailianlian.ablecisi.activity.ChatDetailActivity;
 import com.ailianlian.ablecisi.adapter.ConversationAdapter;
 import com.ailianlian.ablecisi.constant.ExtrasConstant;
@@ -83,22 +83,13 @@ public class ChatListFragment extends Fragment {
     }
 
     private void setupFab() {
-        binding.fabNewChat.setOnClickListener(v -> {
-            // 处理新建聊天按钮点击事件
-            // 跳转到AI角色定制页面
-            Intent intent = new Intent(requireContext(), CharacterCustomizeActivity.class);
-            startActivity(intent);
-        });
+        binding.fabNewChat.setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), CreateConversationActivity.class)));
     }
 
     private void setupEmptyView() {
-        binding.btnStartChat.setOnClickListener(v -> {
-            // 处理开始聊天按钮点击事件
-            Toast.makeText(requireContext(), "开始聊天", Toast.LENGTH_SHORT).show();
-            // 跳转到AI角色定制页面
-            Intent intent = new Intent(requireContext(), CharacterCustomizeActivity.class);
-            startActivity(intent);
-        });
+        binding.btnStartChat.setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), CreateConversationActivity.class)));
     }
     
     private void setupSearchBar() {

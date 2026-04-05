@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.ailianlian.ablecisi.R;
 import com.ailianlian.ablecisi.activity.CharacterCustomizeActivity;
+import com.ailianlian.ablecisi.activity.MyCharactersActivity;
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
 import com.ailianlian.ablecisi.activity.SettingsActivity;
 import com.ailianlian.ablecisi.adapter.CharacterSmallAdapter;
@@ -81,6 +82,10 @@ public class ProfileFragment extends BaseFragment<FragmentProfileBinding> {
         binding.cardWallet.setVisibility(View.GONE);
         binding.cardHelp.setVisibility(View.GONE);
         binding.cardAbout.setVisibility(View.GONE);
+
+        binding.cardMyAiCharacters.setVisibility(View.VISIBLE);
+        binding.cardMyAiCharacters.setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), MyCharactersActivity.class)));
 
         // 设置设置按钮
         binding.buttonSettings.setOnClickListener(v -> {

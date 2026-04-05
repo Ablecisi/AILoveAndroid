@@ -3,28 +3,31 @@ package com.ailianlian.ablecisi.adapter.model;
 import com.ailianlian.ablecisi.pojo.vo.CommentVO;
 
 /**
- * ailianlian
- * com.ailianlian.ablecisi.pojo.entity
- * CommentItem <br>
- *
- * @author Ablecisi
- * @version 1.0
- * 2025/9/1
- * 星期一
- * 09:37
+ * 评论列表行：普通评论，或某棵树的底部「展开/收起」条（共用根评论的 CommentVO 读总数等字段）。
  */
 public class CommentItem {
     public final CommentVO vo;
+    public final boolean expandBar;
     /**
-     * 仅顶层使用：是否折叠其子孙
+     * 仅顶层评论行使用：内容加粗提示折叠（可选）
      */
     public boolean collapsedRoot = false;
 
     public CommentItem(CommentVO vo) {
         this.vo = vo;
+        this.expandBar = false;
+    }
+
+    private CommentItem(CommentVO rootVo, boolean expandBar) {
+        this.vo = rootVo;
+        this.expandBar = expandBar;
+    }
+
+    public static CommentItem newExpandBar(CommentVO rootVo) {
+        return new CommentItem(rootVo, true);
     }
 
     public boolean isRoot() {
-        return vo.depth == null || vo.depth == 0;
+        return !expandBar && (vo.depth == null || vo.depth == 0);
     }
 }

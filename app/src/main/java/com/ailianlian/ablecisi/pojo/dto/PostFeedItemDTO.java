@@ -1,8 +1,8 @@
-package com.ailianlian.ablecisi.pojo.vo;
+package com.ailianlian.ablecisi.pojo.dto;
 
 import java.util.List;
 
-/** 与后端 {@link com.ablecisi.ailovebacked.pojo.vo.PostFeedVO} JSON 对齐 */
+
 public class PostFeedItemDTO {
     public String id;
     public String authorId;
@@ -16,4 +16,5 @@ public class PostFeedItemDTO {
     public Integer shareCount;
     public String createdAt;
     public Boolean liked;
+    public Boolean authorFollowed;
 }

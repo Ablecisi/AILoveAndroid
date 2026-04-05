@@ -5,6 +5,7 @@ import android.content.Context;
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
 import com.ailianlian.ablecisi.pojo.dto.ChatSendDTO;
+import com.ailianlian.ablecisi.pojo.dto.OpenConversationDTO;
 import com.ailianlian.ablecisi.pojo.entity.Conversation;
 import com.ailianlian.ablecisi.pojo.vo.AiCharacterVO;
 import com.ailianlian.ablecisi.pojo.vo.ChatReplyVO;
@@ -183,6 +184,28 @@ public class ChatRepository extends BaseRepository {
             });
         });
 
+    }
+
+    public void openConversation(OpenConversationDTO dto, DataCallback<DialogConversationDTO> dataCallback) {
+        getExecutorService().execute(() ->
+                HttpClient.doPost(getContext(), "/dialog/conversation/open", dto, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Type type = new TypeToken<Result<DialogConversationDTO>>() {
+                        }.getType();
+                        Result<DialogConversationDTO> result = JsonUtil.fromJson(response, type);
+                        if (result != null && result.getCode() == StatusCodeConstant.SUCCESS && result.getData() != null) {
+                            dataCallback.onSuccess(result.getData());
+                        } else {
+                            dataCallback.onError(result != null ? result.getMsg() : "解析失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        dataCallback.onError(error);
+                    }
+                }));
     }
 
     public void listMyConversations(int page, int size, DataCallback<List<Conversation>> dataCallback) {

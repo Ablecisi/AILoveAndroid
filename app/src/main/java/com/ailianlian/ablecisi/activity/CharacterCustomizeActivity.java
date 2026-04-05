@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.ailianlian.ablecisi.R;
 import com.ailianlian.ablecisi.baseclass.BaseActivity;
+import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.ActivityCharacterCustomizeBinding;
 import com.ailianlian.ablecisi.pojo.dto.AiCharacterCreateDTO;
@@ -22,6 +23,7 @@ import com.ailianlian.ablecisi.pojo.dto.AiCharacterUpdateDTO;
 import com.ailianlian.ablecisi.pojo.entity.AiCharacter;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
+import com.ailianlian.ablecisi.repository.ProfileRepository;
 import com.ailianlian.ablecisi.viewmodel.CharacterViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -43,6 +45,9 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
     private Uri selectedImageUri; // 选择的头像图片URI
     private Long characterId; // 用于编辑时传入角色ID
     private List<String> typesList;
+    /** 创建成功后回传角色 ID（供「创建会话」等流程使用） */
+    private boolean returnCharacterIdResult;
+    private ProfileRepository profileRepository;
 
     @Override
     protected ActivityCharacterCustomizeBinding getViewBinding() {
@@ -58,6 +63,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
 
+        returnCharacterIdResult = getIntent().getBooleanExtra(ExtrasConstant.EXTRA_RETURN_CHARACTER_ID, false);
         // 获取传入的角色ID（如果有）
         String i = getIntent().getStringExtra(ExtrasConstant.EXTRA_CHARACTER_ID);
         if (i != null) {
@@ -70,6 +76,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
         Log.i("CharacterCustomizeActivity", "获取 characterId: " + characterId);
         // 初始化ViewModel
         characterViewModel = new ViewModelProvider(this).get(CharacterViewModel.class);
+        profileRepository = new ProfileRepository(this);
         typesList = new ArrayList<>();
     }
 
@@ -146,12 +153,28 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
             binding.loadingOverlay.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         });
 
-        // 观察创建成功状态
-        characterViewModel.getCreateSuccess().observe(this, isSuccess -> {
-            if (isSuccess) {
-                showToast(characterId != null && characterId > 0 ? "角色已保存" : "角色创建成功");
+        characterViewModel.getCreatedCharacterId().observe(this, id -> {
+            if (id == null) {
+                return;
+            }
+            if (returnCharacterIdResult && (characterId == null || characterId <= 0)) {
+                Intent out = new Intent();
+                out.putExtra(ExtrasConstant.EXTRA_CHARACTER_ID, String.valueOf(id));
+                setResult(RESULT_OK, out);
                 finish();
             }
+        });
+
+        // 观察创建成功状态
+        characterViewModel.getCreateSuccess().observe(this, isSuccess -> {
+            if (!Boolean.TRUE.equals(isSuccess)) {
+                return;
+            }
+            if (returnCharacterIdResult && (characterId == null || characterId <= 0)) {
+                return;
+            }
+            showToast(characterId != null && characterId > 0 ? "角色已保存" : "角色创建成功");
+            finish();
         });
 
         // 观察错误信息
@@ -328,8 +351,41 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.character_create)
                 .setMessage("确定保存对该角色的修改吗？")
-                .setPositiveButton(R.string.confirm, (dialog, which) ->
-                        characterViewModel.updateCharacter(characterId, body))
+                .setPositiveButton(R.string.confirm, (dialog, which) -> {
+                    if (selectedImageUri != null) {
+                        binding.loadingOverlay.setVisibility(View.VISIBLE);
+                        profileRepository.uploadAvatarImage(selectedImageUri, getContentResolver(),
+                                new BaseRepository.DataCallback<String>() {
+                                    @Override
+                                    public void onSuccess(String url) {
+                                        runOnUiThread(() -> {
+                                            binding.loadingOverlay.setVisibility(View.GONE);
+                                            body.imageUrl = url;
+                                            selectedImageUri = null;
+                                            characterViewModel.updateCharacter(characterId, body);
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(String msg) {
+                                        runOnUiThread(() -> {
+                                            binding.loadingOverlay.setVisibility(View.GONE);
+                                            showToast(msg != null ? msg : "头像上传失败");
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onNetworkError() {
+                                        runOnUiThread(() -> {
+                                            binding.loadingOverlay.setVisibility(View.GONE);
+                                            showToast(R.string.error_network);
+                                        });
+                                    }
+                                });
+                    } else {
+                        characterViewModel.updateCharacter(characterId, body);
+                    }
+                })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
@@ -363,6 +419,7 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
                 return;
             }
         }
+        // 校验用非空占位；提交前经 OSS 上传后替换为公网 URL（不可把 content:// 发给服务端）
         body.imageUrl = selectedImageUri != null ? selectedImageUri.toString() : "";
 
         StringBuilder stb = new StringBuilder();
@@ -401,7 +458,35 @@ public class CharacterCustomizeActivity extends BaseActivity<ActivityCharacterCu
                 .setTitle(R.string.character_create)
                 .setMessage("确定要创建这个AI角色吗？")
                 .setPositiveButton(R.string.confirm, (dialog, which) -> {
-                    characterViewModel.createCustomCharacter(body);
+                    binding.loadingOverlay.setVisibility(View.VISIBLE);
+                    profileRepository.uploadAvatarImage(selectedImageUri, getContentResolver(),
+                            new BaseRepository.DataCallback<String>() {
+                                @Override
+                                public void onSuccess(String url) {
+                                    runOnUiThread(() -> {
+                                        binding.loadingOverlay.setVisibility(View.GONE);
+                                        body.imageUrl = url;
+                                        selectedImageUri = null;
+                                        characterViewModel.createCustomCharacter(body);
+                                    });
+                                }
+
+                                @Override
+                                public void onError(String msg) {
+                                    runOnUiThread(() -> {
+                                        binding.loadingOverlay.setVisibility(View.GONE);
+                                        showToast(msg != null ? msg : "头像上传失败");
+                                    });
+                                }
+
+                                @Override
+                                public void onNetworkError() {
+                                    runOnUiThread(() -> {
+                                        binding.loadingOverlay.setVisibility(View.GONE);
+                                        showToast(R.string.error_network);
+                                    });
+                                }
+                            });
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();

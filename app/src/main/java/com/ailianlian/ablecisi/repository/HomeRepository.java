@@ -134,7 +134,8 @@ public class HomeRepository extends BaseRepository {
                         List<Topic> topics = new ArrayList<>();
                         int index = 1; // 用于标识话题的索引
                         for (Article article : result.getData()) {
-                            Topic topic = new Topic(article.getId(), article.getTitle(), index, String.valueOf(article.getViewCount()), String.valueOf(article.getComments().size()), String.valueOf(article.getLikeCount()));
+                            int commentTotal = article.getCommentCount() != null ? article.getCommentCount() : 0;
+                            Topic topic = new Topic(article.getId(), article.getTitle(), index, String.valueOf(article.getViewCount()), String.valueOf(commentTotal), String.valueOf(article.getLikeCount()));
                             topics.add(topic);
                             index++;
                         }
