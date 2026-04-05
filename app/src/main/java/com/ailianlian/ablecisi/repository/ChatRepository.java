@@ -9,12 +9,25 @@ import com.ailianlian.ablecisi.pojo.vo.AiCharacterVO;
 import com.ailianlian.ablecisi.pojo.vo.ChatReplyVO;
 import com.ailianlian.ablecisi.pojo.vo.MessageVO;
 import com.ailianlian.ablecisi.result.Result;
+import com.ailianlian.ablecisi.constant.NetWorkPathConstant;
 import com.ailianlian.ablecisi.utils.HttpClient;
 import com.ailianlian.ablecisi.utils.JsonUtil;
+import com.ailianlian.ablecisi.utils.LoginInfoUtil;
+import com.ailianlian.ablecisi.utils.SseEventParser;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * ailianlian
@@ -29,10 +42,102 @@ import java.util.List;
  */
 public class ChatRepository extends BaseRepository {
 
+    private static final String API_BASE = NetWorkPathConstant.BASE_URL + "/api";
+    private static final String TOKEN_HEADER = "token";
+
     public ChatRepository(Context context) {
         super(context);
     }
 
+    /**
+     * 流式发送：SSE {@code chunk} / {@code done} / {@code error}，与后端 {@code POST /api/dialog/send/stream} 对齐。
+     */
+    public interface StreamSendCallback {
+        void onChunk(String text);
+
+        void onComplete(ChatReplyVO reply);
+
+        void onError(String message);
+    }
+
+    public void sendMessageStream(ChatSendDTO dto, StreamSendCallback callback) {
+        getExecutorService().execute(() -> {
+            String token = LoginInfoUtil.getUserToken(getContext());
+            String url = API_BASE + "/dialog/send/stream";
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(0, TimeUnit.SECONDS)
+                    .callTimeout(0, TimeUnit.SECONDS)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .addHeader(TOKEN_HEADER, token == null ? "" : token)
+                    .addHeader("Accept", "text/event-stream")
+                    .post(RequestBody.create(
+                            JsonUtil.toJson(dto),
+                            MediaType.parse("application/json; charset=utf-8")))
+                    .build();
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    String errBody = response.body() != null ? response.body().string() : "";
+                    notifyStreamError(callback, "HTTP " + response.code() + " " + errBody);
+                    return;
+                }
+                if (response.body() == null) {
+                    notifyStreamError(callback, "响应体为空");
+                    return;
+                }
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(response.body().byteStream(), StandardCharsets.UTF_8));
+                SseEventParser.parse(reader, (event, data) -> {
+                    try {
+                        switch (event) {
+                            case "chunk":
+                                String piece = JsonUtil.fromJson(data, String.class);
+                                if (piece != null) {
+                                    callback.onChunk(piece);
+                                }
+                                break;
+                            case "done":
+                                ChatReplyVO vo = JsonUtil.fromJson(data, ChatReplyVO.class);
+                                if (vo != null) {
+                                    callback.onComplete(vo);
+                                } else {
+                                    notifyStreamError(callback, "done 解析失败");
+                                }
+                                break;
+                            case "error":
+                                String msg = safeJsonString(data);
+                                notifyStreamError(callback, msg != null ? msg : data);
+                                break;
+                            default:
+                                break;
+                        }
+                    } catch (Exception e) {
+                        notifyStreamError(callback, e.getMessage() != null ? e.getMessage() : "SSE 解析异常");
+                    }
+                });
+            } catch (Exception e) {
+                notifyStreamError(callback, e.getMessage() != null ? e.getMessage() : "网络错误");
+            }
+        });
+    }
+
+    private static String safeJsonString(String data) {
+        try {
+            return JsonUtil.fromJson(data, String.class);
+        } catch (Exception e) {
+            return data;
+        }
+    }
+
+    private static void notifyStreamError(StreamSendCallback callback, String message) {
+        if (callback != null) {
+            callback.onError(message);
+        }
+    }
+
+    /** 非流式兜底（仍可用） */
     public void sendMessage(ChatSendDTO chatSendDTO, DataCallback<ChatReplyVO> dataCallback) {
         getExecutorService().execute(() -> {
             HttpClient.doPost(getContext(), "/dialog/send", chatSendDTO, new HttpClient.HttpCallback() {

@@ -56,18 +56,18 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding> {
         // 初始化ViewModel
         loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
         // 手机号登录助手初始化
-        mTokenResultListener = new TokenResultListener() {
-            @Override
-            public void onTokenSuccess(String s) {
-                showToast("获取token成功: " + s);
-            }
-
-            @Override
-            public void onTokenFailed(String s) {
-                showToast("获取token失败: " + s);
-            }
-        };
-        mPhoneNumberAuthHelper = PhoneNumberAuthHelper.getInstance(getApplicationContext(), mTokenResultListener);
+//        mTokenResultListener = new TokenResultListener() {
+//            @Override
+//            public void onTokenSuccess(String s) {
+//                showToast("获取token成功: " + s);
+//            }
+//
+//            @Override
+//            public void onTokenFailed(String s) {
+//                showToast("获取token失败: " + s);
+//            }
+//        };
+//        mPhoneNumberAuthHelper = PhoneNumberAuthHelper.getInstance(getApplicationContext(), mTokenResultListener);
     }
 
     @Override

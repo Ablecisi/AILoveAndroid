@@ -45,7 +45,7 @@ public class HomeRepository extends BaseRepository {
             return;
         }
         getExecutorService().execute(() -> {
-            HttpClient.doGet(getContext(), "/user/interests?userId=" + userId, new HttpClient.HttpCallback() {
+            HttpClient.doGet(getContext(), "/user/interests", new HttpClient.HttpCallback() {
                 @Override
                 public void onSuccess(String response) {
                     Result<List<String>> result = JsonUtil.fromJson(response, new TypeToken<Result<List<String>>>() {
@@ -70,7 +70,6 @@ public class HomeRepository extends BaseRepository {
                                   DataCallback<PageResult<AiCharacterVO>> cb) {
         StringBuilder ep = new StringBuilder("/character/list")
                 .append("?page=").append(page).append("&size=").append(size);
-        if (userId != null) ep.append("&userId=").append(userId);
         if (typeId != null) ep.append("&typeId=").append(typeId);
         if (status != null) ep.append("&status=").append(status);
         if (keyword != null && !keyword.isEmpty()) ep.append("&keyword=").append(keyword);

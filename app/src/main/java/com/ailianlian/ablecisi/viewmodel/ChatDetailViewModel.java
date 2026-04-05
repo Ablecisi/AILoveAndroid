@@ -17,13 +17,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatDetailViewModel extends BaseViewModel {
+
+    /** 与列表中占位 AI 气泡 id 一致，流式结束后替换为服务端 messageId */
+    public static final String STREAMING_MESSAGE_ID = "__streaming__";
 
     private final MutableLiveData<AiCharacterVO> character = new MutableLiveData<>();
     private final MutableLiveData<List<Message>> messages = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isTyping = new MutableLiveData<>(false); // AI正在输入状态
+    /** 单次发送错误提示（Activity 可 Toast 后置 null） */
+    private final MutableLiveData<String> streamError = new MutableLiveData<>();
     private final ChatRepository chatRepository;
 
     private String conversationId;
@@ -43,6 +49,14 @@ public class ChatDetailViewModel extends BaseViewModel {
 
     public LiveData<Boolean> getIsTyping() {
         return isTyping;
+    }
+
+    public LiveData<String> getStreamError() {
+        return streamError;
+    }
+
+    public void clearStreamError() {
+        streamError.setValue(null);
     }
 
     public ChatDetailViewModel(Application application) {
@@ -90,35 +104,101 @@ public class ChatDetailViewModel extends BaseViewModel {
 
         List<Message> updatedMessages = new ArrayList<>(currentMessages);
         updatedMessages.add(userMessage);
+
+        String charIdStr = character.getValue() != null && character.getValue().id != null
+                ? character.getValue().id.toString()
+                : "0";
+        Message aiPlaceholder = new Message(
+                STREAMING_MESSAGE_ID,
+                "",
+                LocalDateTime.now(),
+                Message.TYPE_RECEIVED,
+                false,
+                charIdStr,
+                userId
+        );
+        updatedMessages.add(aiPlaceholder);
         messages.setValue(updatedMessages);
 
-        // 模拟AI正在输入
         isTyping.setValue(true);
 
-        chatRepository.sendMessage(chatSendDTO, new ChatRepository.DataCallback<ChatReplyVO>() {
+        AtomicBoolean finished = new AtomicBoolean(false);
+
+        chatRepository.sendMessageStream(chatSendDTO, new ChatRepository.StreamSendCallback() {
             @Override
-            public void onSuccess(ChatReplyVO replyVO) {
-                Message aiMessage = chatReplyToMessage(replyVO);
-                List<Message> messagesWithResponse = new ArrayList<>(messages.getValue());
-                messagesWithResponse.add(aiMessage);
-                messages.postValue(messagesWithResponse);
+            public void onChunk(String text) {
+                if (finished.get() || text == null) {
+                    return;
+                }
+                List<Message> cur = messages.getValue();
+                if (cur == null) {
+                    return;
+                }
+                List<Message> next = new ArrayList<>(cur);
+                for (Message m : next) {
+                    if (STREAMING_MESSAGE_ID.equals(m.getId())) {
+                        String c = m.getContent() != null ? m.getContent() : "";
+                        m.setContent(c + text);
+                        break;
+                    }
+                }
+                messages.postValue(next);
+            }
+
+            @Override
+            public void onComplete(ChatReplyVO replyVO) {
+                if (!finished.compareAndSet(false, true)) {
+                    return;
+                }
+                List<Message> cur = messages.getValue();
+                if (cur == null) {
+                    isTyping.postValue(false);
+                    isLoading.postValue(false);
+                    return;
+                }
+                List<Message> next = new ArrayList<>(cur);
+                Message finalMsg = chatReplyToMessage(replyVO);
+                boolean replaced = false;
+                for (int i = 0; i < next.size(); i++) {
+                    if (STREAMING_MESSAGE_ID.equals(next.get(i).getId())) {
+                        next.set(i, finalMsg);
+                        replaced = true;
+                        break;
+                    }
+                }
+                if (!replaced) {
+                    next.add(finalMsg);
+                }
+                messages.postValue(next);
                 isTyping.postValue(false);
                 isLoading.postValue(false);
             }
 
             @Override
-            public void onError(String error) {
+            public void onError(String message) {
+                if (!finished.compareAndSet(false, true)) {
+                    return;
+                }
+                removeStreamingMessage();
                 isTyping.postValue(false);
                 isLoading.postValue(false);
-            }
-
-            @Override
-            public void onNetworkError() {
-                isTyping.postValue(false);
-                isLoading.postValue(false);
+                streamError.postValue(message != null ? message : "发送失败");
             }
         });
+    }
 
+    private void removeStreamingMessage() {
+        List<Message> cur = messages.getValue();
+        if (cur == null) {
+            return;
+        }
+        List<Message> next = new ArrayList<>();
+        for (Message m : cur) {
+            if (!STREAMING_MESSAGE_ID.equals(m.getId())) {
+                next.add(m);
+            }
+        }
+        messages.postValue(next);
     }
     private void loadChatData() {
         isLoading.setValue(true);

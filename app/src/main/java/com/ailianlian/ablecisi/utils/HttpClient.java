@@ -104,6 +104,12 @@ public class HttpClient {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                if (response.code() == 401 && response.body() != null) {
+                    String body401 = response.body().string();
+                    Log.w(TAG, "HTTP 401，走责任链解析 JSON: " + response.code());
+                    postSuccess(context, callback, body401);
+                    return;
+                }
                 postFailure(context, callback, "未知的状态码 " + response.code());
                 return;
             }
@@ -145,6 +151,12 @@ public class HttpClient {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                if (response.code() == 401 && response.body() != null) {
+                    String body401 = response.body().string();
+                    Log.w(TAG, "HTTP 401，走责任链解析 JSON: " + response.code());
+                    postSuccess(context, callback, body401);
+                    return;
+                }
                 postFailure(context, callback, "未知的状态码 " + response.code());
                 return;
             }

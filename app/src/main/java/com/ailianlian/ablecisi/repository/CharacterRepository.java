@@ -38,7 +38,6 @@ public class CharacterRepository extends BaseRepository {
                      DataCallback<PageResult<AiCharacterVO>> cb) {
         StringBuilder ep = new StringBuilder("/character/list")
                 .append("?page=").append(page).append("&size=").append(size);
-        if (userId != null) ep.append("&userId=").append(userId);
         if (typeId != null) ep.append("&typeId=").append(typeId);
         if (status != null) ep.append("&status=").append(status);
         if (keyword != null && !keyword.isEmpty()) ep.append("&keyword=").append(keyword);

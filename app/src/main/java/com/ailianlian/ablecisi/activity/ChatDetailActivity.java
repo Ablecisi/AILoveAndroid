@@ -121,6 +121,13 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
         viewModel.getIsTyping().observe(this, isTyping -> {
             binding.typingIndicator.setVisibility(isTyping ? View.VISIBLE : View.GONE);
         });
+
+        viewModel.getStreamError().observe(this, msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                viewModel.clearStreamError();
+            }
+        });
     }
 
     private void updateCharacterInfo(AiCharacterVO characterVO) {
