@@ -11,6 +11,7 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 /**
  * ailianlian
@@ -34,6 +35,24 @@ public class LocalDateTimeTypeAdapter implements JsonSerializer<LocalDateTime>, 
 
     @Override
     public LocalDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        return LocalDateTime.parse(json.getAsString(), formatter);
+        String raw = json.getAsString().trim();
+        if (raw.isEmpty()) {
+            throw new JsonParseException("empty datetime");
+        }
+        // 兼容 ISO（T 分隔）与带毫秒
+        String normalized = raw.replace('T', ' ');
+        int dot = normalized.indexOf('.');
+        if (dot > 0) {
+            normalized = normalized.substring(0, dot);
+        }
+        try {
+            return LocalDateTime.parse(normalized, formatter);
+        } catch (DateTimeParseException e) {
+            try {
+                return LocalDateTime.parse(raw.replace(' ', 'T'), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            } catch (DateTimeParseException e2) {
+                throw new JsonParseException("无法解析时间: " + raw, e2);
+            }
+        }
     }
 }

@@ -240,26 +240,8 @@
                                 android:id="@+id/tagChipGroup"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp">
-
-                                <com.google.android.material.chip.Chip
-                                    style="@style/widget_home_chip_action"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="#情感连接" />
-
-                                <com.google.android.material.chip.Chip
-                                    style="@style/widget_home_chip_action"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="#AI互动" />
-
-                                <com.google.android.material.chip.Chip
-                                    style="@style/widget_home_chip_action"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="#数字伙伴" />
-                            </com.google.android.material.chip.ChipGroup>
+                                android:layout_marginTop="8dp"
+                                app:singleLine="false" />
                         </LinearLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

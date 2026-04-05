@@ -202,98 +202,70 @@
                             tools:text="1.2k 点赞" />
                     </LinearLayout>
 
-                    <!-- 操作按钮 -->
-                    <androidx.constraintlayout.widget.ConstraintLayout
+                    <!-- 操作按钮：四等分横排 -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
+                        android:baselineAligned="false"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/likeAndCommentLayout"
+                        <Button
+                            android:id="@+id/btnLike"
+                            style="@style/WidgetButtonOutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@id/shareAndCollectLayout">
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:minHeight="44dp"
+                            android:text="@string/article_like"
+                            android:textSize="12sp"
+                            app:drawableTint="@color/primary" />
 
-                            <Button
-                                android:id="@+id/btnLike"
-                                style="@style/WidgetButtonOutlinedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:layout_marginEnd="2dp"
-                                android:text="@string/article_like"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/btnComment"
-                                app:drawableTint="@color/primary" />
-
-                            <Button
-                                android:id="@+id/btnComment"
-                                style="@style/WidgetButtonOutlinedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:drawablePadding="2dp"
-                                android:layout_marginStart="2dp"
-                                android:text="@string/article_comment"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintStart_toEndOf="@+id/btnLike"
-                                app:drawableTint="@color/text_primary" />
-
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/shareAndCollectLayout"
+                        <Button
+                            android:id="@+id/btnComment"
+                            style="@style/WidgetButtonOutlinedButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toEndOf="@+id/likeAndCommentLayout"
-                            >
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:minHeight="44dp"
+                            android:text="@string/article_comment"
+                            android:textSize="12sp"
+                            app:drawableTint="@color/text_primary" />
 
-                            <Button
-                                android:id="@+id/btnShare"
-                                style="@style/WidgetButtonOutlinedButton"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:drawablePadding="2dp"
-                                android:layout_marginEnd="2dp"
-                                android:text="@string/article_share"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toStartOf="@+id/btnBookmark"
-                                app:drawableTint="@color/text_primary" />
+                        <Button
+                            android:id="@+id/btnShare"
+                            style="@style/WidgetButtonOutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:minHeight="44dp"
+                            android:text="@string/article_share"
+                            android:textSize="12sp"
+                            app:drawableTint="@color/text_primary" />
 
-                            <Button
-                                android:id="@+id/btnBookmark"
-                                style="@style/WidgetButtonOutlinedButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:drawablePadding="2dp"
-                                android:layout_marginStart="2dp"
-                                android:text="@string/article_bookmark"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintStart_toEndOf="@+id/btnShare"
-                                app:drawableTint="@color/primary" />
-
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
+                        <Button
+                            android:id="@+id/btnBookmark"
+                            style="@style/WidgetButtonOutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:minHeight="44dp"
+                            android:text="@string/article_bookmark"
+                            android:textSize="12sp"
+                            app:drawableTint="@color/primary" />
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

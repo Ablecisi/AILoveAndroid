@@ -18,6 +18,7 @@ import com.ailianlian.ablecisi.adapter.TopicAdapter;
 import com.ailianlian.ablecisi.baseclass.BaseFragment;
 import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.FragmentHomeBinding;
+import com.ailianlian.ablecisi.pojo.entity.Article;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.viewmodel.HomeViewModel;
 import com.google.android.material.chip.Chip;
@@ -173,6 +174,7 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
 
                 // 设置封面图片
                 ImageLoader.load(getContext(), featured.getCoverImageUrl(), binding.ivFeatured, R.drawable.placeholder_image, R.drawable.placeholder_image);
+                setupFeaturedArticleTags(featured);
             }
         });
 
@@ -184,5 +186,25 @@ public class HomeFragment extends BaseFragment<FragmentHomeBinding> {
 
     private void getViewModel() {
         viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+    }
+
+    /** 精选卡片展示文章真实标签 */
+    private void setupFeaturedArticleTags(Article featured) {
+        binding.tagChipGroup.removeAllViews();
+        if (featured.getTags() == null || featured.getTags().isEmpty()) {
+            return;
+        }
+        for (String tag : featured.getTags()) {
+            if (tag == null || tag.trim().isEmpty()) {
+                continue;
+            }
+            Chip chip = new Chip(requireContext());
+            chip.setText(tag.trim());
+            chip.setClickable(false);
+            chip.setCheckable(false);
+            chip.setChipBackgroundColorResource(R.color.primary_light);
+            chip.setTextColor(getResources().getColor(R.color.text_primary, null));
+            binding.tagChipGroup.addView(chip);
+        }
     }
 } 

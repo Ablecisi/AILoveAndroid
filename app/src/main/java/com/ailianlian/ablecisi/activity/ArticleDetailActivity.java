@@ -102,6 +102,10 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         // 观察分页评论数据变化
         articleViewModel.getPageResultMutableLiveData().observe(this, pageResult -> {
             commentListAdapter.setDataFromBundle(pageResult);
+            boolean empty = pageResult == null
+                    || pageResult.getRecords() == null
+                    || pageResult.getRecords().isEmpty();
+            binding.tvNoComments.setVisibility(empty ? View.VISIBLE : View.GONE);
         });
 
         // 观察展开评论数据变化
@@ -270,7 +274,6 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         updateLikeButton(article.getLiked());// 设置点赞状态
         updateBookmarkButton(article.getBookmarked());// 设置收藏状态
 
-        binding.tvNoComments.setVisibility(article.getComments().isEmpty() ? View.VISIBLE : View.GONE);// 显示无评论提示
     }
 
     private void updateLikeButton(boolean isLiked) {
@@ -311,6 +314,14 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         }
         shareIntent.putExtra(Intent.EXTRA_TEXT, body);
         startActivity(Intent.createChooser(shareIntent, getString(R.string.article_share)));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (articleId != null) {
+            articleViewModel.recordArticleViewOnce(articleId);
+        }
     }
 
     @Override

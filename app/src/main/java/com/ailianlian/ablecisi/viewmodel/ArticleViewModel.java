@@ -18,7 +18,9 @@ import com.ailianlian.ablecisi.result.PageResult;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 文章详情的ViewModel
@@ -37,6 +39,8 @@ public class ArticleViewModel extends BaseViewModel {
     private final MutableLiveData<Boolean> isFollowing; // 是否关注作者
     private final ArticleRepository articleRepository; // 文章仓库
     private final CommentRepository commentRepository; // 评论仓库
+    /** 避免同一次进入详情重复上报阅读 */
+    private final Set<String> recordedArticleViews = new HashSet<>();
 
     public LiveData<Article> getArticle() {
         return article;
@@ -94,6 +98,46 @@ public class ArticleViewModel extends BaseViewModel {
      *
      * @param articleId 文章ID
      */
+    /**
+     * 进入文章详情时调用一次：服务端 view_count+1，并本地刷新阅读数展示
+     */
+    public void recordArticleViewOnce(String articleId) {
+        if (articleId == null || articleId.isEmpty()) {
+            return;
+        }
+        synchronized (recordedArticleViews) {
+            if (recordedArticleViews.contains(articleId)) {
+                return;
+            }
+            recordedArticleViews.add(articleId);
+        }
+        articleRepository.recordArticleView(articleId, new BaseRepository.DataCallback<Void>() {
+            @Override
+            public void onSuccess(Void data) {
+                Article a = article.getValue();
+                if (a != null && articleId.equals(a.getId())) {
+                    int vc = a.getViewCount() != null ? a.getViewCount() : 0;
+                    a.setViewCount(vc + 1);
+                    article.postValue(a);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                synchronized (recordedArticleViews) {
+                    recordedArticleViews.remove(articleId);
+                }
+            }
+
+            @Override
+            public void onNetworkError() {
+                synchronized (recordedArticleViews) {
+                    recordedArticleViews.remove(articleId);
+                }
+            }
+        });
+    }
+
     public void loadArticle(String articleId) {
         isLoading.postValue(true);
         // 通过repository加载文章数据

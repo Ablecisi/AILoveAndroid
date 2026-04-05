@@ -13,7 +13,9 @@ import com.ailianlian.ablecisi.utils.JsonUtil;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ailianlian
@@ -164,6 +166,36 @@ public class ArticleRepository extends BaseRepository {
                             callback.onSuccess(null);
                         } else {
                             callback.onError(result != null ? result.getMsg() : "操作失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        callback.onError(error);
+                    }
+                }));
+    }
+
+    /**
+     * 记录阅读（服务端浏览量 +1），无需登录
+     */
+    public void recordArticleView(String articleId, DataCallback<Void> callback) {
+        if (articleId == null || articleId.isEmpty()) {
+            callback.onError("文章ID无效");
+            return;
+        }
+        Map<String, Object> emptyBody = new HashMap<>();
+        getExecutorService().execute(() ->
+                HttpClient.doPost(getContext(), "/article/view?articleId=" + articleId, emptyBody, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Type type = new TypeToken<Result<Object>>() {
+                        }.getType();
+                        Result<Object> result = JsonUtil.fromJson(response, type);
+                        if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
+                            callback.onSuccess(null);
+                        } else {
+                            callback.onError(result != null ? result.getMsg() : "记录阅读失败");
                         }
                     }
 

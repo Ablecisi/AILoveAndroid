@@ -26,9 +26,16 @@ public class TimeAgoUtil {
      * @return 相对于当前时间的描述字符串
      */
     public static String toTimeAgo(LocalDateTime time) {
+        if (time == null) {
+            return "—";
+        }
         LocalDateTime now = LocalDateTime.now();
         Duration duration = Duration.between(time, now);
         long seconds = duration.getSeconds();
+        // 服务端时间略快于本地时，避免显示负数
+        if (seconds < 0) {
+            return "刚刚";
+        }
 
         if (seconds < 60) {
             return "刚刚";

@@ -21,6 +21,8 @@ public class CommentVO {
     public String avatarUrl;   // 冗余: 前端直接显示头像
 
     public Long parentId;
+    /** 父评论作者昵称；depth≥2 时用于「A→B」 */
+    public String parentUserName;
     public Long rootId;
     public Integer depth;
     public Integer likeCount;
