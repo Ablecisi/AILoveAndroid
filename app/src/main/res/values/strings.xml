@@ -114,6 +114,9 @@
     <string name="profile_favorites">收藏</string>
     <string name="profile_history">历史记录</string>
     <string name="profile_wallet">钱包</string>
+    <string name="profile_mine_posts_empty">暂无帖子</string>
+    <string name="profile_create_character">新建个人AI角色</string>
+    <string name="profile_wallet_coming_soon">钱包功能即将开放</string>
     <string name="profile_settings">设置</string>
     <string name="profile_help">帮助与反馈</string>
     <string name="profile_about">关于我们</string>
