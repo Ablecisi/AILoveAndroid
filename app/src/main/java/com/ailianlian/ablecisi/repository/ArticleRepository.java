@@ -206,6 +206,29 @@ public class ArticleRepository extends BaseRepository {
                 }));
     }
 
+    public void listCollectedArticles(int page, int size, DataCallback<List<Article>> callback) {
+        getExecutorService().execute(() ->
+                HttpClient.doGet(getContext(), "/article/collect/list?page=" + page + "&size=" + size,
+                        new HttpClient.HttpCallback() {
+                            @Override
+                            public void onSuccess(String response) {
+                                Type type = new TypeToken<Result<List<Article>>>() {
+                                }.getType();
+                                Result<List<Article>> result = JsonUtil.fromJson(response, type);
+                                if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
+                                    callback.onSuccess(result.getData() != null ? result.getData() : List.of());
+                                } else {
+                                    callback.onError(result != null ? result.getMsg() : "加载失败");
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                callback.onError(error);
+                            }
+                        }));
+    }
+
     public void toggleArticleCollect(long articleId, boolean collect, DataCallback<Void> callback) {
         ArticleToggleDTO body = new ArticleToggleDTO(articleId, collect);
         getExecutorService().execute(() ->

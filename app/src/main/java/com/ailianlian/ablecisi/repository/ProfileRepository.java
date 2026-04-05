@@ -6,9 +6,10 @@ import android.net.Uri;
 
 import com.ailianlian.ablecisi.baseclass.BaseRepository;
 import com.ailianlian.ablecisi.constant.StatusCodeConstant;
+import com.ailianlian.ablecisi.pojo.dto.UserPasswordChangeBodyDTO;
 import com.ailianlian.ablecisi.pojo.dto.UserProfileUpdateDTO;
 import com.ailianlian.ablecisi.pojo.entity.User;
-import com.ailianlian.ablecisi.pojo.vo.UploadImageUrlData;
+import com.ailianlian.ablecisi.pojo.entity.UploadImageUrlData;
 import com.ailianlian.ablecisi.result.Result;
 import com.ailianlian.ablecisi.utils.HttpClient;
 import com.ailianlian.ablecisi.utils.JsonUtil;
@@ -58,6 +59,30 @@ public class ProfileRepository extends BaseRepository {
                 }
             });
         });
+    }
+
+    public void changePassword(String oldPassword, String newPassword, DataCallback<Void> callback) {
+        UserPasswordChangeBodyDTO body = new UserPasswordChangeBodyDTO();
+        body.oldPassword = oldPassword;
+        body.newPassword = newPassword;
+        getExecutorService().execute(() ->
+                HttpClient.doPut(getContext(), "/user/password", body, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Result<Void> result = JsonUtil.fromJson(response, new TypeToken<Result<Void>>() {
+                        }.getType());
+                        if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
+                            callback.onSuccess(null);
+                        } else {
+                            callback.onError(result != null ? result.getMsg() : "修改失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        callback.onNetworkError();
+                    }
+                }));
     }
 
     public void updateProfile(UserProfileUpdateDTO dto, DataCallback<User> callback) {

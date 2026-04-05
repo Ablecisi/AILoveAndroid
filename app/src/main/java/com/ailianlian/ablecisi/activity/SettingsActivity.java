@@ -84,15 +84,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         // 个人资料
-        findViewById(R.id.layoutProfile).setOnClickListener(v -> {
-            // 跳转到个人资料页面
-            finish(); // 直接返回，因为个人资料页面是主页的一个标签页
-        });
+        findViewById(R.id.layoutProfile).setOnClickListener(v ->
+                startActivity(new Intent(this, EditProfileActivity.class)));
 
-        // 账号安全
-        findViewById(R.id.layoutSecurity).setOnClickListener(v -> {
-            Toast.makeText(this, R.string.feature_not_available, Toast.LENGTH_SHORT).show();
-        });
+        findViewById(R.id.layoutSecurity).setOnClickListener(v ->
+                startActivity(new Intent(this, AccountSecurityActivity.class)));
 
         // 隐私设置
         findViewById(R.id.layoutPrivacy).setOnClickListener(v -> {

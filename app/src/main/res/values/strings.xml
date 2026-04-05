@@ -117,6 +117,16 @@
     <string name="profile_settings">设置</string>
     <string name="profile_help">帮助与反馈</string>
     <string name="profile_about">关于我们</string>
+    <string name="save">保存</string>
+    <string name="settings_username_hint">登录用户名</string>
+    <string name="profile_display_name_hint">昵称</string>
+    <string name="profile_bio_hint">个人简介</string>
+    <string name="account_security_title">账号安全</string>
+    <string name="password_old_hint">当前密码</string>
+    <string name="password_new_hint">新密码（至少6位）</string>
+    <string name="my_posts_title">我的帖子</string>
+    <string name="favorites_list_title">收藏的文章</string>
+    <string name="history_list_title">浏览历史</string>
     <string name="profile_logout">退出登录</string>
 
     <string name="arrow_right">向右箭头</string>

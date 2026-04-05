@@ -13,6 +13,7 @@ import com.ailianlian.ablecisi.constant.ExtrasConstant;
 import com.ailianlian.ablecisi.databinding.ActivityPostDetailBinding;
 import com.ailianlian.ablecisi.pojo.entity.Post;
 import com.ailianlian.ablecisi.pojo.vo.CommentVO;
+import com.ailianlian.ablecisi.utils.BrowseHistoryStore;
 import com.ailianlian.ablecisi.utils.ImageLoader;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
 import com.ailianlian.ablecisi.viewmodel.PostDetailViewModel;
@@ -137,6 +138,11 @@ public class PostDetailActivity extends BaseActivity<ActivityPostDetailBinding> 
             binding.tvPublishTime.setText(p.getCreatedAt().format(fmt));
         }
         binding.tvContent.setText(p.getContent() != null ? p.getContent() : "");
+        String preview = p.getContent() != null && p.getContent().length() > 48
+                ? p.getContent().substring(0, 48) + "…" : p.getContent();
+        if (p.getId() != null) {
+            BrowseHistoryStore.addPost(this, p.getId(), preview);
+        }
         if (p.getImageUrls() != null && !p.getImageUrls().isEmpty()) {
             binding.ivPostImage.setVisibility(View.VISIBLE);
             ImageLoader.load(this, p.getImageUrls().get(0), binding.ivPostImage);

@@ -33,6 +33,28 @@ public class CommunityRepository extends BaseRepository {
         super(context);
     }
 
+    public void loadMyPosts(int page, int size, DataCallback<List<Post>> callback) {
+        getExecutorService().execute(() ->
+                HttpClient.doGet(getContext(), "/post/mine?page=" + page + "&size=" + size, new HttpClient.HttpCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        Type type = new TypeToken<Result<List<PostFeedItemDTO>>>() {
+                        }.getType();
+                        Result<List<PostFeedItemDTO>> r = JsonUtil.fromJson(response, type);
+                        if (r != null && r.getCode() == StatusCodeConstant.SUCCESS && r.getData() != null) {
+                            callback.onSuccess(mapFeedList(r.getData()));
+                        } else {
+                            callback.onError(r != null ? r.getMsg() : "加载失败");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        callback.onError(error);
+                    }
+                }));
+    }
+
     public void loadFeed(int page, int size, DataCallback<List<Post>> callback) {
         getExecutorService().execute(() ->
                 HttpClient.doGet(getContext(), "/post/feed?page=" + page + "&size=" + size, new HttpClient.HttpCallback() {

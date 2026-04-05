@@ -13,6 +13,8 @@ public class User {
     private String avatarUrl; // 头像URL
     private Integer followingCount; // 关注人数
     private Integer followersCount; // 粉丝人数
+    /** 发帖数（服务端 profile 返回） */
+    private Integer postCount;
     private List<Long> postIds; // 用户帖子ID列表
     private List<Long> characterIds; // 我的角色ID列表
     private Boolean isFollowed; // 是否已关注
@@ -128,6 +130,14 @@ public class User {
 
     public void setPostIds(List<Long> postIds) {
         this.postIds = postIds;
+    }
+
+    public Integer getPostCount() {
+        return postCount;
+    }
+
+    public void setPostCount(Integer postCount) {
+        this.postCount = postCount;
     }
 
     public List<Long> getCharacterIds() {

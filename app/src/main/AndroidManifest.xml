@@ -84,6 +84,32 @@
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".activity.EditProfileActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".activity.AccountSecurityActivity"
+            android:exported="false"
+            android:parentActivityName=".activity.SettingsActivity" />
+
+        <activity
+            android:name=".activity.MyPostsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".activity.FavoritesActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".activity.HistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
         <!-- WebView -->
         <activity
             android:name=".activity.WebViewActivity"

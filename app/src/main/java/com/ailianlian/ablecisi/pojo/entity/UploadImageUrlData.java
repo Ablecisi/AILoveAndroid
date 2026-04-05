@@ -1,4 +1,4 @@
-package com.ailianlian.ablecisi.pojo.vo;
+package com.ailianlian.ablecisi.pojo.entity;
 
 /**
  * 对应后端 {@code Result} 中 {@code data}：{@code { "url": "..." }}。

@@ -21,6 +21,7 @@ import com.ailianlian.ablecisi.pojo.entity.Article;
 import com.ailianlian.ablecisi.pojo.vo.CommentVO;
 import com.ailianlian.ablecisi.utils.CommentExpandStateStore;
 import com.ailianlian.ablecisi.utils.ImageLoader;
+import com.ailianlian.ablecisi.utils.BrowseHistoryStore;
 import com.ailianlian.ablecisi.utils.LoginInfoUtil;
 import com.ailianlian.ablecisi.utils.MarkDownUtil;
 import com.ailianlian.ablecisi.utils.TimeAgoUtil;
@@ -117,6 +118,8 @@ public class ArticleDetailActivity extends BaseActivity<ActivityArticleDetailBin
         articleViewModel.getArticle().observe(this, article -> {
             if (article != null) {
                 updateArticleUI(article);
+                BrowseHistoryStore.addArticle(ArticleDetailActivity.this, article.getId(),
+                        article.getTitle() != null ? article.getTitle() : "文章");
             } else {
                 showToast("文章加载失败");
             }

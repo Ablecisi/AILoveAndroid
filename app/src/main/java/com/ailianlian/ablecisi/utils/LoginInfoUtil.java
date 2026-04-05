@@ -137,7 +137,26 @@ public class LoginInfoUtil {
         editor.remove(LoginSharedPreferencesConstant.KEY_LOGIN_TYPE);
         editor.remove(LoginSharedPreferencesConstant.KEY_USER_ID);
         editor.remove(LoginSharedPreferencesConstant.KEY_TOKEN);
+        editor.remove(LoginSharedPreferencesConstant.KEY_USERNAME);
+        editor.remove(LoginSharedPreferencesConstant.KEY_NAME);
+        editor.remove(LoginSharedPreferencesConstant.KEY_AVATAR_URL);
         editor.apply();
+    }
+
+    /** 资料页保存后同步本地展示用字段（不改变 token） */
+    public static void updateSessionProfile(Context context, String username, String name, String avatarUrl) {
+        SharedPreferences sp = context.getSharedPreferences(LoginSharedPreferencesConstant.PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor ed = sp.edit();
+        if (username != null) {
+            ed.putString(LoginSharedPreferencesConstant.KEY_USERNAME, username);
+        }
+        if (name != null) {
+            ed.putString(LoginSharedPreferencesConstant.KEY_NAME, name);
+        }
+        if (avatarUrl != null) {
+            ed.putString(LoginSharedPreferencesConstant.KEY_AVATAR_URL, avatarUrl);
+        }
+        ed.apply();
     }
 
     /**

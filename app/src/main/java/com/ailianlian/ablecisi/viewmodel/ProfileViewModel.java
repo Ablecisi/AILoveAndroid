@@ -116,21 +116,29 @@ public class ProfileViewModel extends BaseViewModel {
     }
 
     /**
-     * 编辑用户资料（昵称 + 简介；头像 URL 可选）
+     * 编辑用户资料：登录名、昵称、简介、头像 URL（未改头像可传 null 则沿用当前）
      */
-    public void editProfile(String name, String description, String avatarUrl) {
+    public void saveProfileDetails(String username, String name, String description, String avatarUrl) {
         isLoading.setValue(true);
         User currentProfile = userProfile.getValue();
         String av = avatarUrl;
         if (av == null && currentProfile != null) {
             av = currentProfile.getAvatarUrl();
         }
-        UserProfileUpdateDTO dto = new UserProfileUpdateDTO(name, description, av);
+        UserProfileUpdateDTO dto = new UserProfileUpdateDTO();
+        dto.username = username != null ? username.trim() : null;
+        dto.name = name != null ? name.trim() : null;
+        dto.description = description;
+        dto.avatarUrl = av;
         profileRepository.updateProfile(dto, new ProfileRepository.DataCallback<User>() {
             @Override
             public void onSuccess(User data) {
                 userProfile.postValue(data);
                 isLoading.postValue(false);
+                if (data != null) {
+                    LoginInfoUtil.updateSessionProfile(application,
+                            data.getUsername(), data.getName(), data.getAvatarUrl());
+                }
             }
 
             @Override
@@ -148,6 +156,63 @@ public class ProfileViewModel extends BaseViewModel {
     }
 
     /**
+     * 一次提交：可选新头像（先上传 OSS），与用户名、昵称、简介一并写入服务端。
+     */
+    public void saveAllProfileFields(String username, String name, String description, Uri newAvatarUri) {
+        if (newAvatarUri == null) {
+            saveProfileDetails(username, name, description, null);
+            return;
+        }
+        isLoading.setValue(true);
+        profileRepository.uploadAvatarImage(newAvatarUri, application.getContentResolver(),
+                new ProfileRepository.DataCallback<String>() {
+                    @Override
+                    public void onSuccess(String url) {
+                        UserProfileUpdateDTO dto = new UserProfileUpdateDTO();
+                        dto.username = username != null ? username.trim() : null;
+                        dto.name = name != null ? name.trim() : null;
+                        dto.description = description;
+                        dto.avatarUrl = url;
+                        profileRepository.updateProfile(dto, new ProfileRepository.DataCallback<User>() {
+                            @Override
+                            public void onSuccess(User data) {
+                                userProfile.postValue(data);
+                                isLoading.postValue(false);
+                                if (data != null) {
+                                    LoginInfoUtil.updateSessionProfile(application,
+                                            data.getUsername(), data.getName(), data.getAvatarUrl());
+                                }
+                            }
+
+                            @Override
+                            public void onError(String msg) {
+                                getResultMutableLiveData().postValue(Result.error(msg));
+                                isLoading.postValue(false);
+                            }
+
+                            @Override
+                            public void onNetworkError() {
+                                getResultMutableLiveData().postValue(Result.error("网络错误，请稍后重试"));
+                                isLoading.postValue(false);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String msg) {
+                        getResultMutableLiveData().postValue(Result.error(msg));
+                        isLoading.postValue(false);
+                    }
+
+                    @Override
+                    public void onNetworkError() {
+                        getResultMutableLiveData().postValue(Result.error("网络错误，请稍后重试"));
+                        isLoading.postValue(false);
+                    }
+                });
+    }
+
+    /**
      * 相册选图后上传 OSS 并写入用户头像（昵称、简介保持不变）。
      */
     public void uploadAndSaveAvatar(Uri imageUri) {
@@ -160,14 +225,22 @@ public class ProfileViewModel extends BaseViewModel {
                     @Override
                     public void onSuccess(String url) {
                         User u = userProfile.getValue();
-                        String name = u != null && u.getName() != null ? u.getName() : "";
-                        String desc = u != null && u.getDescription() != null ? u.getDescription() : "";
-                        UserProfileUpdateDTO dto = new UserProfileUpdateDTO(name, desc, url);
+                        UserProfileUpdateDTO dto = new UserProfileUpdateDTO();
+                        if (u != null) {
+                            dto.username = u.getUsername();
+                            dto.name = u.getName();
+                            dto.description = u.getDescription();
+                        }
+                        dto.avatarUrl = url;
                         profileRepository.updateProfile(dto, new ProfileRepository.DataCallback<User>() {
                             @Override
                             public void onSuccess(User data) {
                                 userProfile.postValue(data);
                                 isLoading.postValue(false);
+                                if (data != null) {
+                                    LoginInfoUtil.updateSessionProfile(application,
+                                            data.getUsername(), data.getName(), data.getAvatarUrl());
+                                }
                             }
 
                             @Override
