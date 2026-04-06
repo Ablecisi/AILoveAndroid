@@ -24,16 +24,23 @@ public class ChatDetailViewModel extends BaseViewModel {
     /** 与列表中占位 AI 气泡 id 一致，流式结束后替换为服务端 messageId */
     public static final String STREAMING_MESSAGE_ID = "__streaming__";
 
+    public static final int MESSAGE_PAGE_SIZE = 30;
+
     private final MutableLiveData<AiCharacterVO> character = new MutableLiveData<>();
     private final MutableLiveData<List<Message>> messages = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> isTyping = new MutableLiveData<>(false); // AI正在输入状态
     /** 单次发送错误提示（Activity 可 Toast 后置 null） */
     private final MutableLiveData<String> streamError = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> loadingOlder = new MutableLiveData<>(false);
     private final ChatRepository chatRepository;
 
     private String conversationId;
     private String userId; // 模拟用户ID
+    /** 已加载的最早一页页码（从 1 开始） */
+    private int oldestLoadedPage = 1;
+    private boolean hasMoreOlder = true;
+    private boolean isLoadingOlder = false;
 
     public LiveData<AiCharacterVO> getCharacter() {
         return character;
@@ -53,6 +60,14 @@ public class ChatDetailViewModel extends BaseViewModel {
 
     public LiveData<String> getStreamError() {
         return streamError;
+    }
+
+    public LiveData<Boolean> getLoadingOlder() {
+        return loadingOlder;
+    }
+
+    public boolean hasMoreOlder() {
+        return hasMoreOlder;
     }
 
     public void clearStreamError() {
@@ -202,14 +217,21 @@ public class ChatDetailViewModel extends BaseViewModel {
     }
     private void loadChatData() {
         isLoading.setValue(true);
+        oldestLoadedPage = 1;
+        hasMoreOlder = true;
 
-        chatRepository.loadChatHistory(conversationId, new ChatRepository.DataCallback<List<MessageVO>>() {
+        chatRepository.loadChatHistory(conversationId, 1, MESSAGE_PAGE_SIZE,
+                new ChatRepository.DataCallback<List<MessageVO>>() {
             @Override
             public void onSuccess(List<MessageVO> ms) {
                 List<Message> messageList = new ArrayList<>();
-                ms.forEach(messageVO -> {
-                    messageList.add(messageVOToMessage(messageVO));
-                });
+                if (ms != null) {
+                    for (MessageVO messageVO : ms) {
+                        messageList.add(messageVOToMessage(messageVO));
+                    }
+                }
+                hasMoreOlder = ms != null && ms.size() >= MESSAGE_PAGE_SIZE;
+                oldestLoadedPage = 1;
                 messages.postValue(messageList);
                 isLoading.postValue(false);
             }
@@ -224,6 +246,57 @@ public class ChatDetailViewModel extends BaseViewModel {
                 isLoading.postValue(false);
             }
         });
+    }
+
+    /**
+     * 向上滚动接近顶部时加载更早一页，插入列表头部。
+     */
+    public void loadOlderMessages() {
+        if (!hasMoreOlder || isLoadingOlder) {
+            return;
+        }
+        isLoadingOlder = true;
+        loadingOlder.postValue(true);
+        int nextPage = oldestLoadedPage + 1;
+        chatRepository.loadChatHistory(conversationId, nextPage, MESSAGE_PAGE_SIZE,
+                new ChatRepository.DataCallback<List<MessageVO>>() {
+                    @Override
+                    public void onSuccess(List<MessageVO> ms) {
+                        if (ms == null || ms.isEmpty()) {
+                            hasMoreOlder = false;
+                            isLoadingOlder = false;
+                            loadingOlder.postValue(false);
+                            return;
+                        }
+                        List<Message> older = new ArrayList<>();
+                        for (MessageVO messageVO : ms) {
+                            older.add(messageVOToMessage(messageVO));
+                        }
+                        List<Message> cur = messages.getValue();
+                        if (cur == null) {
+                            cur = new ArrayList<>();
+                        }
+                        List<Message> merged = new ArrayList<>(older);
+                        merged.addAll(cur);
+                        hasMoreOlder = ms.size() >= MESSAGE_PAGE_SIZE;
+                        oldestLoadedPage = nextPage;
+                        messages.postValue(merged);
+                        isLoadingOlder = false;
+                        loadingOlder.postValue(false);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        isLoadingOlder = false;
+                        loadingOlder.postValue(false);
+                    }
+
+                    @Override
+                    public void onNetworkError() {
+                        isLoadingOlder = false;
+                        loadingOlder.postValue(false);
+                    }
+                });
     }
 
     private void loadCharacterData(Long conversationId) {
@@ -261,18 +334,20 @@ public class ChatDetailViewModel extends BaseViewModel {
     }
 
     private Message messageVOToMessage(MessageVO messageVO) {
-        String sid = messageVO.emotion != null ? userId : character.getValue() != null ? character.getValue().id.toString() : null;
-        String rid = messageVO.emotion != null ? character.getValue() != null ? character.getValue().id.toString() : null : userId;
+        AiCharacterVO ch = character.getValue();
+        String charId = ch != null && ch.id != null ? ch.id.toString() : "0";
+        boolean isUser = messageVO.type != null && messageVO.type == 0;
+        String sid = isUser ? userId : charId;
+        String rid = isUser ? charId : userId;
 
         return new Message(
                 messageVO.id.toString(),
                 messageVO.content,
                 messageVO.createTime,
                 messageVO.type,
-                messageVO.isRead == 1,
+                messageVO.isRead != null && messageVO.isRead == 1,
                 sid,
                 rid
-
         );
     }
 } 

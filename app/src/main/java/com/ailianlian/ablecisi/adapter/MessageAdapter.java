@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,11 +17,13 @@ import com.ailianlian.ablecisi.R;
 import com.ailianlian.ablecisi.databinding.ItemMessageReceivedBinding;
 import com.ailianlian.ablecisi.databinding.ItemMessageSentBinding;
 import com.ailianlian.ablecisi.pojo.entity.Message;
+import com.ailianlian.ablecisi.viewmodel.ChatDetailViewModel;
 import com.bumptech.glide.Glide;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Objects;
 
 import io.noties.markwon.Markwon;
 import io.noties.markwon.core.CorePlugin;
@@ -28,23 +31,26 @@ import io.noties.markwon.ext.tables.TablePlugin;
 import io.noties.markwon.image.glide.GlideImagesPlugin;
 
 /**
- * ailianlian
- * com.ailianlian.ablecisi.adapter
- * MessageAdapter <br>
  * 消息适配器，用于显示聊天消息列表
- * @author Ablecisi
- * @version 1.0
- * 2025/4/18
- * 星期五
- * 16:03
  */
 public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder> {
+
+    public interface OnMessageActionListener {
+        void onCopy(Message message);
+    }
 
     private final Markwon markwon;
     private String characterAvatar;
     private String userAvatar;
+    @Nullable
+    private final OnMessageActionListener actionListener;
 
     public MessageAdapter(Context context, String characterAvatar, String userAvatar) {
+        this(context, characterAvatar, userAvatar, null);
+    }
+
+    public MessageAdapter(Context context, String characterAvatar, String userAvatar,
+                          @Nullable OnMessageActionListener actionListener) {
         super(new MessageDiffCallback());
         Context app = context.getApplicationContext();
         this.markwon = Markwon.builder(app)
@@ -54,6 +60,7 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
                 .build();
         this.characterAvatar = characterAvatar != null ? characterAvatar : "";
         this.userAvatar = userAvatar != null ? userAvatar : "";
+        this.actionListener = actionListener;
     }
 
     public void setAvatars(String characterAvatar, String userAvatar) {
@@ -85,13 +92,12 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message message = getItem(position);
 
-        // 显示时间戳
         boolean showTimestamp = shouldShowTimestamp(position);
 
         if (holder.getItemViewType() == Message.TYPE_SENT) {
-            ((SentMessageViewHolder) holder).bind(markwon, message, showTimestamp);
+            ((SentMessageViewHolder) holder).bind(markwon, message, showTimestamp, actionListener);
         } else {
-            ((ReceivedMessageViewHolder) holder).bind(message, showTimestamp);
+            ((ReceivedMessageViewHolder) holder).bind(markwon, message, showTimestamp, actionListener);
         }
     }
 
@@ -102,8 +108,10 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
 
         Message currentMessage = getItem(position);
         Message previousMessage = getItem(position - 1);
+        if (currentMessage.getTimestamp() == null || previousMessage.getTimestamp() == null) {
+            return true;
+        }
 
-        // 如果两条消息间隔超过5分钟，显示时间戳
         int timeDiff = currentMessage.getTimestamp().getMinute() - previousMessage.getTimestamp().getMinute();
         return timeDiff > 5;
     }
@@ -116,18 +124,26 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        void bind(Markwon markwon, Message message, boolean showTimestamp) {
+        void bind(Markwon markwon, Message message, boolean showTimestamp,
+                  @Nullable OnMessageActionListener actionListener) {
             String raw = message.getContent();
             markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
             binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
 
-            // 设置时间戳
-            if (showTimestamp) {
+            if (showTimestamp && message.getTimestamp() != null) {
                 binding.tvTimestamp.setVisibility(View.VISIBLE);
                 binding.tvTimestamp.setText(formatDate(message.getTimestamp()));
             } else {
                 binding.tvTimestamp.setVisibility(View.GONE);
             }
+
+            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
+            binding.messageToolbar.setVisibility(streaming ? View.GONE : View.VISIBLE);
+            binding.btnCopy.setOnClickListener(v -> {
+                if (actionListener != null && !streaming) {
+                    actionListener.onCopy(message);
+                }
+            });
         }
     }
 
@@ -139,30 +155,36 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        void bind(Message message, boolean showTimestamp) {
+        void bind(Markwon markwon, Message message, boolean showTimestamp,
+                  @Nullable OnMessageActionListener actionListener) {
             String raw = message.getContent();
             markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
             binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
 
-            // 加载头像
             Glide.with(binding.ivAvatar.getContext())
                     .load(characterAvatar)
                     .placeholder(R.drawable.ic_profile)
                     .error(R.drawable.ic_profile)
                     .into(binding.ivAvatar);
 
-            // 设置时间戳
-            if (showTimestamp) {
+            if (showTimestamp && message.getTimestamp() != null) {
                 binding.tvTimestamp.setVisibility(View.VISIBLE);
                 binding.tvTimestamp.setText(formatDate(message.getTimestamp()));
             } else {
                 binding.tvTimestamp.setVisibility(View.GONE);
             }
+
+            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
+            binding.messageToolbar.setVisibility(streaming ? View.GONE : View.VISIBLE);
+            binding.btnCopy.setOnClickListener(v -> {
+                if (actionListener != null && !streaming) {
+                    actionListener.onCopy(message);
+                }
+            });
         }
     }
 
     private static String formatDate(LocalDateTime date) {
-        // 将时间，例如 2025-04-18T16:03:00，格式化为 "yyyy-MM-dd HH:mm"
         return DateFormat.format("yyyy-MM-dd HH:mm", Date.from(date.atZone(ZoneId.systemDefault()).toInstant())).toString();
     }
 
@@ -174,9 +196,9 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
 
         @Override
         public boolean areContentsTheSame(@NonNull Message oldItem, @NonNull Message newItem) {
-            return oldItem.getContent().equals(newItem.getContent()) &&
-                    oldItem.getType().equals(newItem.getType()) &&
-                    oldItem.getRead().equals(newItem.getRead()); // 如果是封装类型，equals 方法会比较内容
+            return Objects.equals(oldItem.getContent(), newItem.getContent())
+                    && Objects.equals(oldItem.getType(), newItem.getType())
+                    && Objects.equals(oldItem.getRead(), newItem.getRead());
         }
     }
 }
