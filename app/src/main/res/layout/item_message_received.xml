@@ -22,13 +22,14 @@
         android:layout_width="38dp"
         android:layout_height="38dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:padding="2dp"
         android:scaleType="centerCrop"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/messageToolbar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTimestamp"
         app:shapeAppearanceOverlay="@style/CircleImageView"
         app:strokeColor="@color/surface"
-        android:padding="2dp"
         app:strokeWidth="2dp"
         tools:src="@tools:sample/avatars" />
 
@@ -37,14 +38,38 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:background="@drawable/bg_message_received"
         android:maxWidth="260dp"
         android:padding="12dp"
         android:textColor="@color/text_primary"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/ivAvatar"
         app:layout_constraintTop_toBottomOf="@+id/tvTimestamp"
         tools:text="你好，我是小雪，很高兴认识你！" />
 
-</androidx.constraintlayout.widget.ConstraintLayout> 
+    <LinearLayout
+        android:id="@+id/messageToolbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:gravity="start|center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/ivAvatar"
+        app:layout_constraintTop_toBottomOf="@+id/tvMessage">
+
+        <TextView
+            android:id="@+id/btnCopy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="4dp"
+            android:text="@string/article_copy"
+            android:textColor="@color/text_hint"
+            android:textSize="12sp" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

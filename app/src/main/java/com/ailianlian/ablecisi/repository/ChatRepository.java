@@ -163,9 +163,15 @@ public class ChatRepository extends BaseRepository {
         });
     }
 
-    public void loadChatHistory(String conversationId, DataCallback<List<MessageVO>> dataCallback) {
+    /**
+     * 分页拉取会话消息（后端默认 page=1、size=10；建议显式传 size）。
+     */
+    public void loadChatHistory(String conversationId, int page, int size,
+                                DataCallback<List<MessageVO>> dataCallback) {
         getExecutorService().execute(() -> {
-            HttpClient.doGet(getContext(), "/dialog/list?conversationId=" + conversationId, new HttpClient.HttpCallback() {
+            String url = "/dialog/list?conversationId=" + conversationId
+                    + "&page=" + page + "&size=" + size;
+            HttpClient.doGet(getContext(), url, new HttpClient.HttpCallback() {
                 @Override
                 public void onSuccess(String response) {
                     Type type = new TypeToken<Result<List<MessageVO>>>() {
@@ -173,7 +179,9 @@ public class ChatRepository extends BaseRepository {
                     Result<List<MessageVO>> result = JsonUtil.fromJson(response, type);
                     if (result != null && result.getCode() == StatusCodeConstant.SUCCESS) {
                         List<MessageVO> messageList = result.getData();
-                        dataCallback.onSuccess(messageList);
+                        dataCallback.onSuccess(messageList != null ? messageList : new ArrayList<>());
+                    } else {
+                        dataCallback.onError(result != null ? result.getMsg() : "加载失败");
                     }
                 }
 
@@ -183,7 +191,6 @@ public class ChatRepository extends BaseRepository {
                 }
             });
         });
-
     }
 
     public void openConversation(OpenConversationDTO dto, DataCallback<DialogConversationDTO> dataCallback) {
