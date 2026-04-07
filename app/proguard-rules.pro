@@ -27,3 +27,5 @@
 -dontwarn retrofit2.**
 -dontwarn com.google.firebase.**
 -dontwarn com.airbnb.lottie.** 
+-dontwarn com.caverock.androidsvg.**
+-dontwarn pl.droidsonroids.gif.**

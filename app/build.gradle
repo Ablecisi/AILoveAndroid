@@ -90,6 +90,8 @@ dependencies {
     implementation 'io.noties.markwon:image:4.6.2'
     implementation 'io.noties.markwon:image-glide:4.6.2' // 用 Glide 加载图片
     implementation 'io.noties.markwon:ext-tables:4.6.2'
+    implementation 'com.caverock:androidsvg:1.4'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.29'
 
     // 导入本地 AAR 文件
     implementation fileTree(dir: 'libs', include: ['*.aar'])
