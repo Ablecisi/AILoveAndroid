@@ -23,6 +23,9 @@ import com.bumptech.glide.Glide;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import io.noties.markwon.Markwon;
@@ -34,6 +37,7 @@ import io.noties.markwon.image.glide.GlideImagesPlugin;
  * 消息适配器，用于显示聊天消息列表
  */
 public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder> {
+    private static final String PAYLOAD_STREAM_APPEND = "stream_append";
 
     public interface OnMessageActionListener {
         void onCopy(Message message);
@@ -44,6 +48,7 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
     private String userAvatar;
     @Nullable
     private final OnMessageActionListener actionListener;
+    private final Map<String, StringBuilder> streamingTextOverride = new HashMap<>();
 
     public MessageAdapter(Context context, String characterAvatar, String userAvatar) {
         this(context, characterAvatar, userAvatar, null);
@@ -95,10 +100,62 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
         boolean showTimestamp = shouldShowTimestamp(position);
 
         if (holder.getItemViewType() == Message.TYPE_SENT) {
-            ((SentMessageViewHolder) holder).bind(markwon, message, showTimestamp, actionListener);
+            ((SentMessageViewHolder) holder).bind(markwon, resolveContent(message), message, showTimestamp, actionListener);
         } else {
-            ((ReceivedMessageViewHolder) holder).bind(markwon, message, showTimestamp, actionListener);
+            ((ReceivedMessageViewHolder) holder).bind(markwon, resolveContent(message), message, showTimestamp, actionListener);
         }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty() && payloads.contains(PAYLOAD_STREAM_APPEND)) {
+            Message message = getItem(position);
+            if (holder.getItemViewType() == Message.TYPE_RECEIVED) {
+                ((ReceivedMessageViewHolder) holder).bindMessageOnly(markwon, resolveContent(message));
+                return;
+            }
+        }
+        super.onBindViewHolder(holder, position, payloads);
+    }
+
+    private String resolveContent(Message message) {
+        if (message == null) {
+            return "";
+        }
+        StringBuilder sb = streamingTextOverride.get(message.getId());
+        if (sb != null) {
+            return sb.toString();
+        }
+        return message.getContent() != null ? message.getContent() : "";
+    }
+
+    public boolean appendStreamingText(String messageId, String piece) {
+        if (messageId == null || piece == null || piece.isEmpty()) {
+            return false;
+        }
+        int pos = -1;
+        List<Message> list = getCurrentList();
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Message m = list.get(i);
+            if (messageId.equals(m.getId())) {
+                pos = i;
+                break;
+            }
+        }
+        if (pos < 0) {
+            return false;
+        }
+        StringBuilder sb = streamingTextOverride.computeIfAbsent(messageId, k -> new StringBuilder());
+        sb.append(piece);
+        notifyItemChanged(pos, PAYLOAD_STREAM_APPEND);
+        return true;
+    }
+
+    public void clearStreamingOverride(String messageId) {
+        if (messageId == null) {
+            return;
+        }
+        streamingTextOverride.remove(messageId);
     }
 
     private boolean shouldShowTimestamp(int position) {
@@ -124,11 +181,17 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        void bind(Markwon markwon, Message message, boolean showTimestamp,
+        void bind(Markwon markwon, String content, Message message, boolean showTimestamp,
                   @Nullable OnMessageActionListener actionListener) {
-            String raw = message.getContent();
-            markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
-            binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
+            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
+            if (streaming) {
+                // 流式增量阶段避免重型 Markdown 渲染，减少 chunk 合并感。
+                binding.tvMessage.setText(content != null ? content : "");
+                binding.tvMessage.setMovementMethod(null);
+            } else {
+                markwon.setMarkdown(binding.tvMessage, content != null ? content : "");
+                binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
+            }
 
             if (showTimestamp && message.getTimestamp() != null) {
                 binding.tvTimestamp.setVisibility(View.VISIBLE);
@@ -137,13 +200,17 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
                 binding.tvTimestamp.setVisibility(View.GONE);
             }
 
-            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
             binding.messageToolbar.setVisibility(streaming ? View.GONE : View.VISIBLE);
             binding.btnCopy.setOnClickListener(v -> {
                 if (actionListener != null && !streaming) {
                     actionListener.onCopy(message);
                 }
             });
+        }
+
+        void bindMessageOnly(Markwon markwon, String content) {
+            binding.tvMessage.setText(content != null ? content : "");
+            binding.tvMessage.setMovementMethod(null);
         }
     }
 
@@ -155,11 +222,16 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
             this.binding = binding;
         }
 
-        void bind(Markwon markwon, Message message, boolean showTimestamp,
+        void bind(Markwon markwon, String content, Message message, boolean showTimestamp,
                   @Nullable OnMessageActionListener actionListener) {
-            String raw = message.getContent();
-            markwon.setMarkdown(binding.tvMessage, raw != null ? raw : "");
-            binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
+            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
+            if (streaming) {
+                binding.tvMessage.setText(content != null ? content : "");
+                binding.tvMessage.setMovementMethod(null);
+            } else {
+                markwon.setMarkdown(binding.tvMessage, content != null ? content : "");
+                binding.tvMessage.setMovementMethod(LinkMovementMethod.getInstance());
+            }
 
             Glide.with(binding.ivAvatar.getContext())
                     .load(characterAvatar)
@@ -174,13 +246,17 @@ public class MessageAdapter extends ListAdapter<Message, RecyclerView.ViewHolder
                 binding.tvTimestamp.setVisibility(View.GONE);
             }
 
-            boolean streaming = ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(message.getId());
             binding.messageToolbar.setVisibility(streaming ? View.GONE : View.VISIBLE);
             binding.btnCopy.setOnClickListener(v -> {
                 if (actionListener != null && !streaming) {
                     actionListener.onCopy(message);
                 }
             });
+        }
+
+        void bindMessageOnly(Markwon markwon, String content) {
+            binding.tvMessage.setText(content != null ? content : "");
+            binding.tvMessage.setMovementMethod(null);
         }
     }
 

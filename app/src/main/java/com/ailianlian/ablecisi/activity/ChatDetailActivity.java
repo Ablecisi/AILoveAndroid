@@ -38,6 +38,7 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
     private boolean pendingInitialScroll = true;
     /** 用户是否停留在列表底部附近（用于流式是否自动跟随） */
     private boolean pinnedToBottom = true;
+    private final StringBuilder pendingUiDelta = new StringBuilder();
 
     @Override
     protected ActivityChatDetailBinding getViewBinding() {
@@ -153,6 +154,15 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
                 binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE));
         viewModel.getIsTyping().observe(this, isTyping ->
                 binding.typingIndicator.setVisibility(isTyping ? View.VISIBLE : View.GONE));
+        viewModel.getStreamDelta().observe(this, this::applyStreamDelta);
+        viewModel.getStreamStage().observe(this, stage -> {
+            if (stage == null) {
+                return;
+            }
+            if ("ack".equals(stage) || "start".equals(stage) || "preprocess_done".equals(stage)) {
+                binding.typingIndicator.setVisibility(View.VISIBLE);
+            }
+        });
         viewModel.getStreamError().observe(this, msg -> {
             if (msg != null && !msg.isEmpty()) {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
@@ -182,6 +192,16 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
         }
 
         final List<Message> newList = new ArrayList<>(messages);
+        boolean hasStreaming = false;
+        for (Message m : newList) {
+            if (ChatDetailViewModel.STREAMING_MESSAGE_ID.equals(m.getId())) {
+                hasStreaming = true;
+                break;
+            }
+        }
+        if (!hasStreaming) {
+            adapter.clearStreamingOverride(ChatDetailViewModel.STREAMING_MESSAGE_ID);
+        }
         final List<Message> oldList = new ArrayList<>(adapter.getCurrentList());
         final int oldSize = oldList.size();
         final String oldFirstId = oldList.isEmpty() ? null : oldList.get(0).getId();
@@ -193,6 +213,7 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
         final int oldOffset = oldTopView != null ? oldTopView.getTop() : 0;
 
         adapter.submitList(newList, () -> binding.rvMessages.post(() -> {
+            flushPendingUiDelta();
             if (newList.isEmpty()) {
                 return;
             }
@@ -216,6 +237,42 @@ public class ChatDetailActivity extends BaseActivity<ActivityChatDetailBinding> 
             }
             updatePinnedState();
         }));
+    }
+
+    private void applyStreamDelta(ChatDetailViewModel.StreamDelta delta) {
+        if (delta == null || delta.text == null || delta.text.isEmpty()) {
+            return;
+        }
+        boolean ok = adapter.appendStreamingText(delta.messageId, delta.text);
+        if (!ok) {
+            synchronized (pendingUiDelta) {
+                pendingUiDelta.append(delta.text);
+            }
+            binding.rvMessages.postDelayed(this::flushPendingUiDelta, 30L);
+        }
+        if (pinnedToBottom && layoutManager != null) {
+            int n = adapter.getItemCount();
+            if (n > 0) {
+                layoutManager.scrollToPosition(n - 1);
+            }
+        }
+    }
+
+    private void flushPendingUiDelta() {
+        String pending;
+        synchronized (pendingUiDelta) {
+            if (pendingUiDelta.length() == 0) {
+                return;
+            }
+            pending = pendingUiDelta.toString();
+            pendingUiDelta.setLength(0);
+        }
+        boolean ok = adapter.appendStreamingText(ChatDetailViewModel.STREAMING_MESSAGE_ID, pending);
+        if (!ok) {
+            synchronized (pendingUiDelta) {
+                pendingUiDelta.insert(0, pending);
+            }
+        }
     }
 
     @Override

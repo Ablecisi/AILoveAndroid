@@ -57,6 +57,18 @@ public class ChatRepository extends BaseRepository {
      * 流式发送：SSE {@code chunk} / {@code done} / {@code error}，与后端 {@code POST /api/dialog/send/stream} 对齐。
      */
     public interface StreamSendCallback {
+        default void onAck(String requestId) {
+        }
+
+        default void onStart() {
+        }
+
+        default void onPreprocessDone() {
+        }
+
+        default void onHeartbeat() {
+        }
+
         void onChunk(String text);
 
         void onComplete(ChatReplyVO reply);
@@ -96,8 +108,26 @@ public class ChatRepository extends BaseRepository {
                 SseEventParser.parse(reader, (event, data) -> {
                     try {
                         switch (event) {
+                            case "ack":
+                                try {
+                                    java.util.Map<?, ?> m = JsonUtil.fromJson(data, java.util.Map.class);
+                                    Object rid = m != null ? m.get("requestId") : null;
+                                    callback.onAck(rid != null ? String.valueOf(rid) : null);
+                                } catch (Exception ignore) {
+                                    callback.onAck(null);
+                                }
+                                break;
+                            case "start":
+                                callback.onStart();
+                                break;
+                            case "preprocess_done":
+                                callback.onPreprocessDone();
+                                break;
+                            case "heartbeat":
+                                callback.onHeartbeat();
+                                break;
                             case "chunk":
-                                String piece = JsonUtil.fromJson(data, String.class);
+                                String piece = safeJsonString(data);
                                 if (piece != null) {
                                     callback.onChunk(piece);
                                 }

@@ -1,6 +1,8 @@
 package com.ailianlian.ablecisi.viewmodel;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -32,6 +34,8 @@ public class ChatDetailViewModel extends BaseViewModel {
     private final MutableLiveData<Boolean> isTyping = new MutableLiveData<>(false); // AI正在输入状态
     /** 单次发送错误提示（Activity 可 Toast 后置 null） */
     private final MutableLiveData<String> streamError = new MutableLiveData<>();
+    private final MutableLiveData<StreamDelta> streamDelta = new MutableLiveData<>();
+    private final MutableLiveData<String> streamStage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> loadingOlder = new MutableLiveData<>(false);
     private final ChatRepository chatRepository;
 
@@ -41,6 +45,10 @@ public class ChatDetailViewModel extends BaseViewModel {
     private int oldestLoadedPage = 1;
     private boolean hasMoreOlder = true;
     private boolean isLoadingOlder = false;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final StringBuilder pendingDeltaBuffer = new StringBuilder();
+    private long lastDeltaEmitAt = 0L;
+    private boolean deltaFlushScheduled = false;
 
     public LiveData<AiCharacterVO> getCharacter() {
         return character;
@@ -60,6 +68,14 @@ public class ChatDetailViewModel extends BaseViewModel {
 
     public LiveData<String> getStreamError() {
         return streamError;
+    }
+
+    public LiveData<StreamDelta> getStreamDelta() {
+        return streamDelta;
+    }
+
+    public LiveData<String> getStreamStage() {
+        return streamStage;
     }
 
     public LiveData<Boolean> getLoadingOlder() {
@@ -134,30 +150,50 @@ public class ChatDetailViewModel extends BaseViewModel {
         );
         updatedMessages.add(aiPlaceholder);
         messages.setValue(updatedMessages);
+        streamStage.setValue("start");
 
         isTyping.setValue(true);
 
         AtomicBoolean finished = new AtomicBoolean(false);
+        AtomicBoolean firstChunkSeen = new AtomicBoolean(false);
 
         chatRepository.sendMessageStream(chatSendDTO, new ChatRepository.StreamSendCallback() {
+            @Override
+            public void onAck(String requestId) {
+                streamStage.postValue("ack");
+            }
+
+            @Override
+            public void onStart() {
+                streamStage.postValue("start");
+            }
+
+            @Override
+            public void onPreprocessDone() {
+                streamStage.postValue("preprocess_done");
+                isLoading.postValue(false);
+            }
+
+            @Override
+            public void onHeartbeat() {
+                streamStage.postValue("heartbeat");
+            }
+
             @Override
             public void onChunk(String text) {
                 if (finished.get() || text == null) {
                     return;
                 }
-                List<Message> cur = messages.getValue();
-                if (cur == null) {
+                if (text.isEmpty()) {
                     return;
                 }
-                List<Message> next = new ArrayList<>(cur);
-                for (Message m : next) {
-                    if (STREAMING_MESSAGE_ID.equals(m.getId())) {
-                        String c = m.getContent() != null ? m.getContent() : "";
-                        m.setContent(c + text);
-                        break;
-                    }
+                if (firstChunkSeen.compareAndSet(false, true)) {
+                    isLoading.postValue(false);
                 }
-                messages.postValue(next);
+                synchronized (pendingDeltaBuffer) {
+                    pendingDeltaBuffer.append(text);
+                }
+                emitDeltaIfNeeded(false);
             }
 
             @Override
@@ -165,6 +201,7 @@ public class ChatDetailViewModel extends BaseViewModel {
                 if (!finished.compareAndSet(false, true)) {
                     return;
                 }
+                emitDeltaIfNeeded(true);
                 List<Message> cur = messages.getValue();
                 if (cur == null) {
                     isTyping.postValue(false);
@@ -185,6 +222,7 @@ public class ChatDetailViewModel extends BaseViewModel {
                     next.add(finalMsg);
                 }
                 messages.postValue(next);
+                streamStage.postValue("done");
                 isTyping.postValue(false);
                 isLoading.postValue(false);
             }
@@ -195,11 +233,36 @@ public class ChatDetailViewModel extends BaseViewModel {
                     return;
                 }
                 removeStreamingMessage();
+                streamStage.postValue("error");
                 isTyping.postValue(false);
                 isLoading.postValue(false);
                 streamError.postValue(message != null ? message : "发送失败");
             }
         });
+    }
+
+    private void emitDeltaIfNeeded(boolean force) {
+        long now = System.currentTimeMillis();
+        if (!force && now - lastDeltaEmitAt < 40L) {
+            if (!deltaFlushScheduled) {
+                deltaFlushScheduled = true;
+                mainHandler.postDelayed(() -> {
+                    deltaFlushScheduled = false;
+                    emitDeltaIfNeeded(false);
+                }, 40L);
+            }
+            return;
+        }
+        final String out;
+        synchronized (pendingDeltaBuffer) {
+            if (pendingDeltaBuffer.length() == 0) {
+                return;
+            }
+            out = pendingDeltaBuffer.toString();
+            pendingDeltaBuffer.setLength(0);
+        }
+        lastDeltaEmitAt = now;
+        mainHandler.post(() -> streamDelta.setValue(new StreamDelta(STREAMING_MESSAGE_ID, out)));
     }
 
     private void removeStreamingMessage() {
@@ -349,5 +412,15 @@ public class ChatDetailViewModel extends BaseViewModel {
                 sid,
                 rid
         );
+    }
+
+    public static class StreamDelta {
+        public final String messageId;
+        public final String text;
+
+        public StreamDelta(String messageId, String text) {
+            this.messageId = messageId;
+            this.text = text;
+        }
     }
 } 
